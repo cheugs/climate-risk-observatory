@@ -97,9 +97,15 @@ in the top bar and in the band at the bottom of the page:
   narrow screens where the top bar links are hidden.
 - **full report** at <http://127.0.0.1:8050/report> - the self-contained Quarto HTML report.
 - **report.pdf** at <http://127.0.0.1:8050/report.pdf> - the print version.
+- **French versions** at `/summary?lang=fr`, `/report/fr` and `/report/fr.pdf`.
+
+Every page carries an **EN / FR** switch in the top bar. It is a plain link rather than a
+JavaScript toggle: clicking it reloads the page in the other language, so no server-rendered
+string or figure can be left behind. The choice is remembered in a `cro_lang` cookie, which is why
+the switch follows you from the dashboard to the summary and back.
 
 These are plain Flask routes added to the same server, so there is nothing extra to start: run
-`cro app` and all three are available. If the report tables are missing, `/summary` still loads
+`cro app` and all of them are available. If the report tables are missing, `/summary` still loads
 and explains which step to run.
 
 ## Deploy it for free
@@ -111,6 +117,9 @@ The observatory is live on Render's free plan at
 - summary - <https://climate-risk-observatory.onrender.com/summary>
 - report - <https://climate-risk-observatory.onrender.com/report>
 - PDF - <https://climate-risk-observatory.onrender.com/report.pdf>
+- synthèse (FR) - <https://climate-risk-observatory.onrender.com/summary?lang=fr>
+- rapport (FR) - <https://climate-risk-observatory.onrender.com/report/fr>
+- PDF (FR) - <https://climate-risk-observatory.onrender.com/report/fr.pdf>
 
 The free instance sleeps after 15 minutes without visitors, so the first request may take about a
 minute; after that it is responsive. The URL is stable - it does not change between deploys.
@@ -159,13 +168,14 @@ src/cro/features/build.py       hazard, exposure, vulnerability, risk versions
 src/cro/analysis/               descriptives, hypotheses, regression, spatial statistics
 src/cro/viz/                    shared theme, static maps, charts, export
 src/cro/app/                    Plotly Dash dashboard + Flask summary/report routes
+src/cro/app/i18n.py             every English/French string and number format
 src/cro/db/                     PostGIS schema and idempotent loader
 src/cro/report/                 report snippets + Quarto render (markdown fallback)
-report/                         report.qmd (the prose) and theme.scss
+report/                         report.qmd / report.fr.qmd, theme.scss, language pill
 tests/                          indicator maths, data contracts, presentation smoke tests
 data/processed/                 all intermediate tables as Parquet
 outputs/maps|figures|tables/    deliverables
-outputs/report/                 report.html, validation.md, key_results.md
+outputs/report/                 report(.fr).html/.pdf, validation.md, key_results.md
 ```
 
 The analysis table `data/processed/region_master.parquet` is the single source every output reads

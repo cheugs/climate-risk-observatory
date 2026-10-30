@@ -12,6 +12,7 @@ format:
     number-sections: true
     code-fold: false
     embed-resources: true
+    include-in-header: lang-switch-en.html
     theme:
       light: [cosmo, theme.scss]
     fig-cap-location: bottom

@@ -156,6 +156,29 @@ def test_summary_page_builds_from_the_report_tables():
     assert "/assets/summary.css" in page
 
 
+def test_summary_page_has_a_french_version():
+    """The French page must be translated, not the English page relabelled."""
+    from cro.app.summary import build_summary_html
+
+    page = build_summary_html(lang="fr")
+
+    assert "la synthèse" in page
+    assert "ce que nous avons trouvé" in page
+    assert "1,38" in page           # French decimal comma
+    assert "0,786" in page
+    assert "/report/fr.pdf" in page
+    assert "the summary" not in page
+    assert 'href="/summary?lang=en"' in page
+
+
+def test_every_interface_string_has_a_french_translation():
+    """A missing translation would show English inside the French page."""
+    from cro.app.i18n import TEXTS, keys_missing_french
+
+    assert keys_missing_french() == []
+    assert all(isinstance(pair, tuple) and len(pair) == 2 for pair in TEXTS.values())
+
+
 def test_summary_and_report_routes_respond():
     """Flask must serve the summary, the HTML report and the PDF."""
     from cro.app.app import create_app
@@ -173,3 +196,42 @@ def test_summary_and_report_routes_respond():
     pdf = client.head("/report.pdf")
     assert pdf.status_code == 200
     assert pdf.headers["Content-Type"] == "application/pdf"
+
+
+def test_french_summary_and_report_routes_respond():
+    """The French summary and both French report files must be reachable."""
+    from cro.app.app import create_app
+
+    client = create_app().server.test_client()
+
+    summary = client.get("/summary?lang=fr")
+    assert summary.status_code == 200
+    assert "la synthèse" in summary.data.decode("utf-8")
+    assert summary.headers.get("Set-Cookie", "").startswith("cro_lang=fr")
+
+    report = client.head("/report/fr")
+    assert report.status_code == 200
+    assert "text/html" in report.headers["Content-Type"]
+
+    pdf = client.head("/report/fr.pdf")
+    assert pdf.status_code == 200
+    assert pdf.headers["Content-Type"] == "application/pdf"
+
+
+def test_dashboard_layout_switches_language():
+    """The layout is rebuilt per request, in the language of the reader."""
+    from cro.app.app import create_app
+
+    client = create_app().server.test_client()
+
+    french = client.get("/_dash-layout?lang=fr")
+    english = client.get("/_dash-layout?lang=en")
+
+    assert french.status_code == 200
+    assert english.status_code == 200
+    assert "la carte." in french.data.decode("utf-8")
+    assert "the map." in english.data.decode("utf-8")
+    assert "?lang=en" in french.data.decode("utf-8")
+    assert "lang-option is-current" in french.data.decode("utf-8")
+    assert "Cache-Control" in french.headers
+    assert french.headers["Cache-Control"] == "no-store"

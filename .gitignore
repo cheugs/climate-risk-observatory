@@ -29,3 +29,6 @@ report/generated/
 
 # Logs
 *.log
+report/report.fr.html
+report/report.fr.pdf
+report/generated_fr/

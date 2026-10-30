@@ -23,8 +23,12 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash import ALL, Input, Output, State, ctx, dash, dcc, html
 from dash.exceptions import PreventUpdate
+from flask import request
 from statsmodels.nonparametric.smoothers_lowess import lowess
 
+from cro.app.i18n import COOKIE_NAME, LANGS
+from cro.app.i18n import compact as compact_number
+from cro.app.i18n import current_lang, normalize, num, t, tf
 from cro.app.queries import load_data
 from cro.app.summary import register_report_routes
 from cro.utils import log
@@ -36,9 +40,23 @@ from cro.utils import log
 DATA = load_data()
 
 COUNTRY_CODES = ["FRA", "IND", "USA"]
-COUNTRY_NAMES = {"FRA": "France", "IND": "India", "USA": "United States"}
-COUNTRY_ADJECTIVES = {"FRA": "france", "IND": "india", "USA": "united states"}
 COUNTRY_COLORS = {"FRA": "#1a1512", "IND": "#6a0c06", "USA": "#3f5c3a"}
+# "1.80bn" reads as one token; French wants a space before "Md".
+BILLION_SUFFIX = {"en": "bn", "fr": "\u00a0Md"}
+
+
+def _lang(lang: str | None = None) -> str:
+    """Resolve the language for a builder: explicit, request, or English."""
+    return normalize(lang) if lang else current_lang()
+
+
+def country_name(iso3: str, lang: str | None = None) -> str:
+    return t(f"country.name.{iso3}", _lang(lang)) if iso3 in COUNTRY_CODES else iso3
+
+
+def country_adjective(iso3: str, lang: str | None = None) -> str:
+    return t(f"country.{iso3}", _lang(lang)) if iso3 in COUNTRY_CODES else iso3.lower()
+
 
 
 def _map_rows(iso3: str) -> pd.DataFrame:
@@ -142,70 +160,40 @@ HOVER = {
 
 INDICATORS = {
     "risk_equal": {
-        "label": "composite risk",
-        "axis": "risk index",
+        "key": "risk",
         "fmt": "{:.3f}",
         "colors": WARM_COLORS,
-        "low": "less risk",
-        "high": "more risk",
-        "rank_title": "the highest composite risk",
-        "top_label": "Highest composite risk",
         "ascending": False,
     },
     "hazard_equal": {
-        "label": "climate hazard",
-        "axis": "hazard index",
+        "key": "hazard",
         "fmt": "{:.3f}",
         "colors": WARM_COLORS,
-        "low": "lower hazard",
-        "high": "higher hazard",
-        "rank_title": "the highest climate hazard",
-        "top_label": "Highest climate hazard",
         "ascending": False,
     },
     "hd35_area": {
-        "label": "heat days above 35 C",
-        "axis": "days per year",
+        "key": "heat",
         "fmt": "{:,.1f}",
         "colors": WARM_COLORS,
-        "low": "fewer hot days",
-        "high": "more hot days",
-        "rank_title": "the most days above 35 C",
-        "top_label": "Most days above 35 C",
         "ascending": False,
     },
     "person_days_heat": {
-        "label": "exposure to extreme heat",
-        "axis": "person-days of heat",
+        "key": "exposure",
         "fmt": "{:,.0f}",
         "colors": WARM_COLORS,
-        "low": "lower exposure",
-        "high": "higher exposure",
-        "rank_title": "the largest heat exposure",
-        "top_label": "Largest heat exposure",
         "ascending": False,
         "log": True,
     },
     "vulnerability": {
-        "label": "vulnerability",
-        "axis": "vulnerability index",
+        "key": "vulnerability",
         "fmt": "{:.2f}",
         "colors": WARM_COLORS,
-        "low": "less vulnerable",
-        "high": "more vulnerable",
-        "rank_title": "the highest vulnerability",
-        "top_label": "Highest vulnerability",
         "ascending": False,
     },
     "shdi": {
-        "label": "human development (SHDI)",
-        "axis": "SHDI",
+        "key": "shdi",
         "fmt": "{:.3f}",
         "colors": COOL_COLORS,
-        "low": "lower SHDI",
-        "high": "higher SHDI",
-        "rank_title": "the lowest human development",
-        "top_label": "Lowest SHDI",
         "ascending": True,
     },
 }
@@ -213,18 +201,19 @@ INDICATORS = {
 MEASURE_CHOICES = [
     ("risk_equal", "risk"),
     ("hazard_equal", "hazard"),
-    ("hd35_area", "heat days"),
+    ("hd35_area", "heat"),
     ("person_days_heat", "exposure"),
     ("vulnerability", "vulnerability"),
-    ("shdi", "SHDI"),
+    ("shdi", "shdi"),
 ]
 
 COUNTRY_CHOICES = [
     ("all", "all"),
-    ("FRA", "france"),
-    ("IND", "india"),
-    ("USA", "usa"),
+    ("FRA", "FRA"),
+    ("IND", "IND"),
+    ("USA", "USA"),
 ]
+
 
 # Headline numbers, computed once from the data rather than typed by hand.
 TOTAL_POPULATION = DATA["population"].sum() / 1e9
@@ -244,27 +233,23 @@ TOP_REGION = DATA.sort_values("risk_equal", ascending=False).iloc[0]["region_id"
 # Small formatting helpers
 # ---------------------------------------------------------------------------
 
-def compact(value) -> str:
+def compact(value, lang: str | None = None) -> str:
     """Turn 1,803,100,000 into 1.80bn for small spaces."""
-    if pd.isna(value):
-        return "n/a"
-    value = float(value)
-    if value >= 1e9:
-        return f"{value / 1e9:.2f}bn"
-    if value >= 1e6:
-        return f"{value / 1e6:.1f}m"
-    if value >= 1e3:
-        return f"{value / 1e3:.1f}k"
-    return f"{value:,.0f}"
+    return compact_number(value, _lang(lang))
 
 
-def fmt_value(indicator: str, value) -> str:
+def fmt_value(indicator: str, value, lang: str | None = None) -> str:
     """Format one value in the units of the selected measure."""
+    lang = _lang(lang)
     if pd.isna(value):
-        return "n/a"
+        return t("misc.na", lang)
     if indicator == "person_days_heat":
-        return compact(value)
-    return INDICATORS[indicator]["fmt"].format(float(value))
+        return compact(value, lang)
+    text = INDICATORS[indicator]["fmt"].format(float(value))
+    if lang == "fr":
+        text = text.replace(",", "\u202f").replace(".", ",")
+    return text
+
 
 
 def plot_values(indicator: str, values: pd.Series) -> pd.Series:
@@ -359,7 +344,10 @@ def empty_figure(message: str) -> go.Figure:
     return figure
 
 
-def build_country_map(indicator: str, iso3: str, bounds: tuple, height: int = 300) -> go.Figure:
+def build_country_map(
+    indicator: str, iso3: str, bounds: tuple, height: int = 300,
+    lang: str | None = None,
+) -> go.Figure:
     """A country map drawn as projected polygons.
 
     Plotly's Choropleth trace draws a background rectangle around each
@@ -367,6 +355,7 @@ def build_country_map(indicator: str, iso3: str, bounds: tuple, height: int = 30
     projected outlines ourselves avoids that bug and keeps the basemap-free
     editorial look.
     """
+    lang = _lang(lang)
     spec = INDICATORS[indicator]
     low, high = bounds
     span = max(high - low, 1e-9)
@@ -377,20 +366,21 @@ def build_country_map(indicator: str, iso3: str, bounds: tuple, height: int = 30
         raw = row[indicator]
         if pd.isna(raw):
             fill = "#cfd8c6"
-            value_text = "n/a"
+            value_text = t("misc.na", lang)
         else:
             plotted = float(np.log10(max(raw, 1))) if spec.get("log") else float(raw)
             fill = blend(spec["colors"], (plotted - low) / span)
-            value_text = fmt_value(indicator, raw)
+            value_text = fmt_value(indicator, raw, lang)
 
         hover = (
-            f"<b>{row['region_name']}</b> \u00b7 {row['country']}<br>"
-            f"Population {compact(row['population'])}<br>"
-            f"Hazard {fmt_value('hazard_equal', row['hazard_equal'])} \u00b7 "
-            f"SHDI {fmt_value('shdi', row['shdi'])}<br>"
-            f"Risk {fmt_value('risk_equal', row['risk_equal'])}<br>"
-            f"{spec['label']}: {value_text}"
+            f"<b>{row['region_name']}</b> \u00b7 {country_name(row['iso3'], lang)}<br>"
+            f"{t('hover.population', lang)} {compact(row['population'], lang)}<br>"
+            f"{t('hover.hazard', lang)} {fmt_value('hazard_equal', row['hazard_equal'], lang)} \u00b7 "
+            f"{t('hover.shdi', lang)} {fmt_value('shdi', row['shdi'], lang)}<br>"
+            f"{t('hover.risk', lang)} {fmt_value('risk_equal', row['risk_equal'], lang)}<br>"
+            f"{t('measure.' + spec['key'] + '.label', lang)}: {value_text}"
         )
+
 
         point_data = np.tile(
             np.array([part["region_id"], hover, value_text], dtype=object),
@@ -441,65 +431,71 @@ def build_country_map(indicator: str, iso3: str, bounds: tuple, height: int = 30
     return figure
 
 
-def build_legend(indicator: str, view: str):
+def build_legend(indicator: str, view: str, lang: str | None = None):
     """HTML legend so the colour scale is readable without Plotly toolbars."""
-    spec = INDICATORS[indicator]
+    lang = _lang(lang)
+    key = INDICATORS[indicator]["key"]
     _, (raw_low, raw_high) = measure_bounds(indicator, view)
 
     if view == "all":
-        scope = "shared across the three maps"
+        scope = t("map.legend_shared", lang)
     else:
-        scope = f"scaled to {COUNTRY_NAMES.get(view, view).lower()} only"
+        scope = tf("map.legend_scaled", lang, country=country_adjective(view, lang))
 
     return [
         html.Div([
-            html.Span(f"colour = {spec['label']}", className="legend-title"),
+            html.Span(tf("map.legend_colour", lang, label=t(f"measure.{key}.label", lang)),
+                      className="legend-title"),
             html.Span(scope, className="micro"),
         ], className="legend-head"),
         html.Div(
             className="legend-bar",
-            style={"background": "linear-gradient(90deg," + ",".join(spec["colors"]) + ")"},
+            style={"background": "linear-gradient(90deg," + ",".join(INDICATORS[indicator]["colors"]) + ")"},
         ),
         html.Div([
-            html.Span(f"{fmt_value(indicator, raw_low)} \u00b7 {spec['low']}"),
-            html.Span(f"{fmt_value(indicator, raw_high)} \u00b7 {spec['high']}"),
+            html.Span(f"{fmt_value(indicator, raw_low, lang)} \u00b7 {t(f'measure.{key}.low', lang)}"),
+            html.Span(f"{fmt_value(indicator, raw_high, lang)} \u00b7 {t(f'measure.{key}.high', lang)}"),
         ], className="legend-ticks"),
     ]
 
 
-def build_map_note(indicator: str, view: str):
+def build_map_note(indicator: str, view: str, lang: str | None = None):
     """One sentence that explains the current view, plus honest caveats."""
+    lang = _lang(lang)
     spec = INDICATORS[indicator]
+    key = spec["key"]
     rows = visible_rows(view).dropna(subset=[indicator])
     top = rows.sort_values(indicator, ascending=spec["ascending"]).iloc[0]
 
     parts = [
-        html.B(f"{spec['top_label']}: {top['region_name']} ({fmt_value(indicator, top[indicator])}). "),
-        "Click any region to open its profile. ",
+        html.B(tf(
+            "map.note_top", lang,
+            label=t(f"measure.{key}.top_label", lang),
+            region=top["region_name"],
+            value=fmt_value(indicator, top[indicator], lang),
+        )),
+        t("map.note_click", lang),
     ]
     if view == "all":
-        parts.append(
-            "The colour scale is shared by all three maps, so shades compare across "
-            "countries. India sets the top of the scale, which is why France and the "
-            "United States look pale here; choose a country to rescale it. "
-        )
+        parts.append(t("map.note_shared", lang))
     else:
-        parts.append("The colour scale is fitted to this country, so it shows internal differences. ")
+        parts.append(t("map.note_fitted", lang))
     if spec.get("log"):
-        parts.append("Exposure is coloured on a log scale. ")
+        parts.append(t("map.note_log", lang))
     if view in ("all", "USA"):
-        parts.append(
-            "The US panel shows the continental states; Alaska, Hawai\u02bbi and the "
-            "territories remain in the ranking and profile data."
-        )
+        parts.append(t("map.note_us", lang))
     return parts
 
 
-def build_scatter(selected_region: str | None, view: str) -> go.Figure:
+
+def build_scatter(
+    selected_region: str | None, view: str, lang: str | None = None,
+) -> go.Figure:
     """Hazard against SHDI, one colour per country, selected region ringed."""
+    lang = _lang(lang)
     data = visible_rows(view).dropna(subset=["hazard_equal", "shdi"]).copy()
     if data.empty:
-        return empty_figure("No development data for this view.")
+        return empty_figure(t("relation.empty", lang))
 
     figure = go.Figure()
 
@@ -511,7 +507,7 @@ def build_scatter(selected_region: str | None, view: str) -> go.Figure:
             x=group["hazard_equal"],
             y=group["shdi"],
             mode="markers",
-            name=COUNTRY_NAMES[iso3],
+            name=country_name(iso3, lang),
             marker={
                 "size": 8,
                 "color": COUNTRY_COLORS[iso3],
@@ -520,17 +516,19 @@ def build_scatter(selected_region: str | None, view: str) -> go.Figure:
             },
             customdata=np.stack([
                 group["region_name"].astype(str),
-                group["risk_equal"].map(lambda v: "n/a" if pd.isna(v) else f"{v:.3f}"),
-                group["population"].map(compact),
+                group["risk_equal"].map(lambda v: t("misc.na", lang) if pd.isna(v) else f"{v:.3f}"),
+                group["population"].map(lambda v: compact(v, lang)),
             ], axis=-1),
             hovertemplate=(
                 "<b>%{customdata[0]}</b><br>"
-                "Hazard %{x:.3f}<br>"
-                "SHDI %{y:.3f}<br>"
-                "Risk %{customdata[1]} \u00b7 population %{customdata[2]}"
+                f"{t('hover.hazard', lang)} %{{x:.3f}}<br>"
+                f"{t('hover.shdi', lang)} %{{y:.3f}}<br>"
+                f"{t('hover.risk', lang)} %{{customdata[1]}} \u00b7 "
+                f"{t('hover.population', lang).lower()} %{{customdata[2]}}"
                 "<extra></extra>"
             ),
         ))
+
 
     # Smooth trend line through all visible regions.
     if len(data) > 8:
@@ -539,7 +537,7 @@ def build_scatter(selected_region: str | None, view: str) -> go.Figure:
             x=smooth[:, 0],
             y=smooth[:, 1],
             mode="lines",
-            name="trend (LOWESS)",
+            name=t("relation.trend", lang),
             line={"color": DARK, "width": 1.6},
             hoverinfo="skip",
         ))
@@ -568,7 +566,7 @@ def build_scatter(selected_region: str | None, view: str) -> go.Figure:
                     "color": "rgba(0,0,0,0)",
                     "line": {"width": 2.2, "color": DARK},
                 },
-                name="selected",
+                name=t("relation.selected", lang),
                 hoverinfo="skip",
                 showlegend=False,
             ))
@@ -604,7 +602,7 @@ def build_scatter(selected_region: str | None, view: str) -> go.Figure:
         },
     )
     figure.update_xaxes(
-        title={"text": "Climate hazard index (0-1)", "font": {"size": 10}},
+        title={"text": t("relation.axis_x", lang), "font": {"size": 10}},
         range=[0, 1],
         gridcolor="rgba(106,12,6,0.14)",
         zeroline=False,
@@ -614,7 +612,7 @@ def build_scatter(selected_region: str | None, view: str) -> go.Figure:
         tickfont={"size": 9},
     )
     figure.update_yaxes(
-        title={"text": "Subnational HDI (SHDI)", "font": {"size": 10}},
+        title={"text": t("relation.axis_y", lang), "font": {"size": 10}},
         gridcolor="rgba(106,12,6,0.14)",
         zeroline=False,
         linecolor="rgba(106,12,6,0.35)",
@@ -625,29 +623,30 @@ def build_scatter(selected_region: str | None, view: str) -> go.Figure:
     return figure
 
 
-def build_profile_chart(region_id: str | None) -> go.Figure:
+def build_profile_chart(region_id: str | None, lang: str | None = None) -> go.Figure:
     """Percentile position of one region, with its country median marked.
 
     Raw values are on very different scales (heat days vs an index from 0 to
     1), so comparing them on one axis is meaningless. Percentiles put them on
     a common 0-100 scale; the hover box still shows the real values.
     """
+    lang = _lang(lang)
     if not region_id:
-        return empty_figure("Choose a region to see its profile.")
+        return empty_figure(t("profile.empty", lang))
 
     row = DATA[DATA["region_id"] == region_id]
     if row.empty:
-        return empty_figure("Region not found.")
+        return empty_figure(t("profile.not_found", lang))
     row = row.iloc[0]
     country = DATA[DATA["iso3"] == row["iso3"]]
 
     metrics = [
-        ("Risk", "risk_equal"),
-        ("Vulnerability", "vulnerability"),
-        ("Hazard", "hazard_equal"),
-        ("Exposure", "person_days_heat"),
-        ("Heat days", "hd35_area"),
-        ("SHDI", "shdi"),
+        (t("metric.risk", lang), "risk_equal"),
+        (t("metric.vulnerability", lang), "vulnerability"),
+        (t("metric.hazard", lang), "hazard_equal"),
+        (t("metric.exposure", lang), "person_days_heat"),
+        (t("metric.heat", lang), "hd35_area"),
+        (t("metric.shdi", lang), "shdi"),
     ]
 
     labels, position, hover = [], [], []
@@ -658,18 +657,19 @@ def build_profile_chart(region_id: str | None) -> go.Figure:
         pct = percentile(values, row[column])
         position.append(0 if pct is None else pct)
         hover.append([
-            fmt_value(column, row[column]) if column != "person_days_heat" else compact(row[column]),
-            "n/a" if pct is None else f"{pct:.0f}th percentile",
+            fmt_value(column, row[column], lang) if column != "person_days_heat" else compact(row[column], lang),
+            t("misc.na", lang) if pct is None else tf("profile.percentile", lang, value=f"{pct:.0f}"),
         ])
 
         median = country[column].median()
         cpct = percentile(values, median)
         country_position.append(0 if cpct is None else cpct)
         country_hover.append([
-            "n/a" if pd.isna(median) else (
-                compact(median) if column == "person_days_heat" else INDICATORS[column]["fmt"].format(median)
+            t("misc.na", lang) if pd.isna(median) else (
+                compact(median, lang) if column == "person_days_heat"
+                else fmt_value(column, median, lang)
             ),
-            "n/a" if cpct is None else f"{cpct:.0f}th percentile",
+            t("misc.na", lang) if cpct is None else tf("profile.percentile", lang, value=f"{cpct:.0f}"),
         ])
         labels.append(label)
 
@@ -678,7 +678,7 @@ def build_profile_chart(region_id: str | None) -> go.Figure:
         x=position,
         y=labels,
         orientation="h",
-        name="this region",
+        name=t("profile.this_region", lang),
         marker={"color": INK, "line": {"width": 0}},
         width=0.5,
         customdata=hover,
@@ -691,7 +691,7 @@ def build_profile_chart(region_id: str | None) -> go.Figure:
         x=country_position,
         y=labels,
         mode="markers",
-        name="country median",
+        name=t("profile.country_median", lang),
         marker={
             "symbol": "diamond",
             "size": 9,
@@ -700,7 +700,7 @@ def build_profile_chart(region_id: str | None) -> go.Figure:
         },
         customdata=country_hover,
         hovertemplate=(
-            "<b>%{y}</b> \u00b7 country median<br>%{customdata[0]}<br>"
+            f"<b>%{{y}}</b> \u00b7 {t('profile.country_median', lang)}<br>%{{customdata[0]}}<br>"
             "%{customdata[1]}<extra></extra>"
         ),
     ))
@@ -727,7 +727,7 @@ def build_profile_chart(region_id: str | None) -> go.Figure:
         },
     )
     figure.update_xaxes(
-        title={"text": "percentile among regions with data", "font": {"size": 10}},
+        title={"text": t("profile.axis", lang), "font": {"size": 10}},
         range=[0, 100],
         gridcolor="rgba(106,12,6,0.14)",
         zeroline=False,
@@ -747,33 +747,35 @@ def build_profile_chart(region_id: str | None) -> go.Figure:
 # HTML builders: region detail, ranking, ticker and methods
 # ---------------------------------------------------------------------------
 
-def detail_rows(region_id: str | None):
+def detail_rows(region_id: str | None, lang: str | None = None):
     """The region card shown in section 05."""
+    lang = _lang(lang)
     if not region_id:
-        return [html.P("Choose a region above, or click one on the map.", className="empty")]
+        return [html.P(t("profile.choose", lang), className="empty")]
 
     row = DATA[DATA["region_id"] == region_id]
     if row.empty:
-        return [html.P("Region not found.", className="empty")]
+        return [html.P(t("profile.not_found", lang), className="empty")]
     row = row.iloc[0]
 
     rank = row["risk_rank"]
-    rank_text = "n/a" if pd.isna(rank) else f"{int(rank):02d}"
+    rank_text = t("misc.na", lang) if pd.isna(rank) else f"{int(rank):02d}"
 
     cells = [
-        ("risk rank", rank_text, f" of {N_RANKED}"),
-        ("risk index", fmt_value("risk_equal", row["risk_equal"]), ""),
-        ("hazard index", fmt_value("hazard_equal", row["hazard_equal"]), ""),
-        ("heat days / year", fmt_value("hd35_area", row["hd35_area"]), ""),
-        ("population", compact(row["population"]), ""),
-        ("SHDI", fmt_value("shdi", row["shdi"]), ""),
-        ("vulnerability", fmt_value("vulnerability", row["vulnerability"]), ""),
-        ("heat exposure", compact(row["person_days_heat"]), " person-days"),
+        (t("detail.risk_rank", lang), rank_text, tf("detail.of_ranked", lang, n=N_RANKED)),
+        (t("detail.risk_index", lang), fmt_value("risk_equal", row["risk_equal"], lang), ""),
+        (t("detail.hazard_index", lang), fmt_value("hazard_equal", row["hazard_equal"], lang), ""),
+        (t("detail.heat_days", lang), fmt_value("hd35_area", row["hd35_area"], lang), ""),
+        (t("detail.population", lang), compact(row["population"], lang), ""),
+        (t("detail.shdi", lang), fmt_value("shdi", row["shdi"], lang), ""),
+        (t("detail.vulnerability", lang), fmt_value("vulnerability", row["vulnerability"], lang), ""),
+        (t("detail.heat_exposure", lang), compact(row["person_days_heat"], lang),
+         t("detail.person_days", lang)),
     ]
 
     return [
         html.P(
-            f"{COUNTRY_NAMES.get(row['iso3'], row['iso3'])} \u00b7 {row['iso3']}",
+            f"{country_name(row['iso3'], lang)} \u00b7 {row['iso3']}",
             className="profile-country",
         ),
         html.H3(str(row["region_name"]), className="profile-name"),
@@ -790,12 +792,13 @@ def detail_rows(region_id: str | None):
     ]
 
 
-def build_ranking(indicator: str, view: str):
+def build_ranking(indicator: str, view: str, lang: str | None = None):
     """Top ten regions for the current measure and view.
 
     Returns the row elements, the matching region ids (for click handling)
     and a heading that names the measure.
     """
+    lang = _lang(lang)
     spec = INDICATORS[indicator]
     data = visible_rows(view).dropna(subset=[indicator])
     data = data.sort_values(indicator, ascending=spec["ascending"]).head(10)
@@ -820,7 +823,7 @@ def build_ranking(indicator: str, view: str):
                 html.Span([
                     html.Span(str(row["region_name"]), className="rank-name"),
                     html.Span(
-                        f"{row['iso3']} \u00b7 {COUNTRY_NAMES.get(row['iso3'], row['iso3'])}",
+                        f"{row['iso3']} \u00b7 {country_name(row['iso3'], lang)}",
                         className="rank-country",
                     ),
                 ], className="rank-who"),
@@ -828,27 +831,28 @@ def build_ranking(indicator: str, view: str):
                     html.Span(style={"width": f"{max(2, min(100, width)):.1f}%"}),
                     className="rank-bar",
                 ),
-                html.Span(fmt_value(indicator, row[indicator]), className="rank-value"),
+                html.Span(fmt_value(indicator, row[indicator], lang), className="rank-value"),
             ],
             id={"type": "rank-row", "index": number - 1},
             n_clicks=0,
             className="rank-row",
-            title=f"Show {row['region_name']} in the profile",
+            title=tf("ranking.tooltip", lang, region=row["region_name"]),
         ))
         ids.append(str(row["region_id"]))
 
-    return rows, ids, spec["rank_title"]
+    return rows, ids, t(f"measure.{spec['key']}.rank_title", lang)
 
 
-def ticker_segment():
+def ticker_segment(lang: str | None = None):
     """One copy of the number strip in the fixed header."""
+    lang = _lang(lang)
     items = [
-        ("105", "admin-1 regions"),
-        ("3", "countries"),
-        (f"{TOTAL_POPULATION:.2f}bn", "people covered"),
-        (f"{MEDIAN_RISK:.3f}", "median risk"),
-        (RHO_TEXT, "hazard-SHDI rank correlation"),
-        ("bih\u0101r", "highest risk region"),
+        ("105", t("ticker.regions", lang)),
+        ("3", t("ticker.countries", lang)),
+        (f"{num(TOTAL_POPULATION, 2, lang)}{BILLION_SUFFIX[lang]}", t("ticker.people", lang)),
+        (num(MEDIAN_RISK, 3, lang), t("ticker.median_risk", lang)),
+        (RHO_TEXT, t("ticker.rho", lang)),
+        ("bih\u0101r", t("ticker.top_region", lang)),
     ]
     # Doubling the items makes the strip wider than most screens.
     doubled = items * 2
@@ -859,54 +863,54 @@ def ticker_segment():
 
 
 METHODS = [
-    (
-        "01 / hazard",
-        "Six climate measures from NASA POWER daily data (1991-2023): days above "
-        "35 C, tropical nights, the longest dry spell, water balance, the heaviest "
-        "one-day rainfall and very wet days. Each is converted to a percentile, "
-        "combined into heat, dry and wet sub-indices, then averaged.",
-    ),
-    (
-        "02 / exposure",
-        "GHS-POP 2020 population at 30 arc-seconds. Each person is assigned to the "
-        "nearest climate sample point, so person-days of extreme heat = population "
-        "x heat days. This is why a hot but empty region does not rank like a hot "
-        "and crowded one.",
-    ),
-    (
-        "03 / vulnerability",
-        "One minus the percentile rank of the subnational Human Development Index "
-        "(Global Data Lab). Regions without an SHDI keep their hazard and exposure "
-        "scores but are left out of the development models.",
-    ),
-    (
-        "04 / risk",
-        "Composite risk = hazard x exposure x vulnerability, following the IPCC "
-        "framing. An additive version and a PCA-weighted version are kept as "
-        "robustness checks; the regional ordering barely moves between them.",
-    ),
-    (
-        "05 / statistics",
-        "Mann-Whitney tests, Cliff's delta and Spearman correlation for the "
-        "development relationship; country fixed effects for the regression; "
-        "Moran's I and LISA for spatial clustering. Full tables are in the report.",
-    ),
-    (
-        "06 / scope",
-        "Pilot of 105 admin-1 regions in France, India and the United States. The "
-        "pipeline is written to scale to roughly 3,700 regions worldwide without "
-        "changing the index definition.",
-    ),
+    ("method.hazard_title", "method.hazard_text"),
+    ("method.exposure_title", "method.exposure_text"),
+    ("method.vulnerability_title", "method.vulnerability_text"),
+    ("method.risk_title", "method.risk_text"),
+    ("method.statistics_title", "method.statistics_text"),
+    ("method.scope_title", "method.scope_text"),
 ]
+
 
 
 # ---------------------------------------------------------------------------
 # Layout
 # ---------------------------------------------------------------------------
 
-def layout() -> html.Div:
+def language_switch(lang: str, page: str = "/") -> html.Div:
+    """The EN / FR control in the top bar.
+
+    A plain link rather than a callback: a full reload rebuilds every
+    server-rendered string and every figure in one go, which keeps the
+    implementation simple and the two languages impossible to mix.
+    """
+    def option(code: str, label: str, title: str):
+        active = lang == code
+        attributes = {"className": "lang-option is-current"}
+        if active:
+            attributes["aria-current"] = "true"
+        else:
+            attributes["className"] = "lang-option"
+        return html.A(label, href=f"{page}?lang={code}", title=title, **attributes)
+
+    return html.Div(
+        [
+            option("en", "EN", t("misc.english", lang)),
+            html.Span("/", className="lang-sep", **{"aria-hidden": "true"}),
+            option("fr", "FR", t("misc.french", lang)),
+        ],
+        className="lang-switch",
+        **{"aria-label": t("misc.language", lang), "role": "group"},
+    )
+
+
+def layout(lang: str | None = None) -> html.Div:
+    lang = _lang(lang)
+    report_href = "/report/fr" if lang == "fr" else "/report"
+    pdf_href = "/report/fr.pdf" if lang == "fr" else "/report.pdf"
+
     initial_bounds, _ = measure_bounds("risk_equal", "all")
-    initial_rows, initial_ids, initial_heading = build_ranking("risk_equal", "all")
+    initial_rows, initial_ids, initial_heading = build_ranking("risk_equal", "all", lang)
     region_options = [
         {
             "label": f"{row.region_name} \u00b7 {row.iso3}",
@@ -920,21 +924,22 @@ def layout() -> html.Div:
         map_panels.append(html.Div(
             [
                 html.Div([
-                    html.H3(COUNTRY_ADJECTIVES[iso3], className="map-country"),
+                    html.H3(country_adjective(iso3, lang), className="map-country"),
                     html.Span(
-                        f"{len(MAP_ROWS[iso3])} regions",
+                        tf("map.region_count", lang, n=len(MAP_ROWS[iso3])),
                         className="map-meta",
                     ),
                 ], className="map-panel-head"),
                 dcc.Graph(
                     id=f"map-{iso3}",
-                    figure=build_country_map("risk_equal", iso3, initial_bounds, 320),
+                    figure=build_country_map("risk_equal", iso3, initial_bounds, 320, lang),
                     config={"displayModeBar": False, "responsive": True},
                 ),
             ],
             id=f"panel-{iso3}",
             className="map-panel",
         ))
+
 
     return html.Div([
         # Hairline layout grid behind the page.
@@ -948,44 +953,45 @@ def layout() -> html.Div:
         html.Header([
             html.A("cro.", href="#top", className="brand"),
             html.Div(
-                html.Div([ticker_segment(), ticker_segment()], className="ticker-track"),
+                html.Div([ticker_segment(lang), ticker_segment(lang)], className="ticker-track"),
                 className="ticker",
             ),
             html.Nav([
-                html.A("map", href="#map"),
-                html.A("ranking", href="#ranking"),
-                html.A("relationship", href="#relationship"),
-                html.A("profile", href="#profile"),
-                html.A("methods", href="#methods"),
-                html.A("summary", href="/summary"),
+                html.A(t("nav.map", lang), href="#map"),
+                html.A(t("nav.ranking", lang), href="#ranking"),
+                html.A(t("nav.relationship", lang), href="#relationship"),
+                html.A(t("nav.profile", lang), href="#profile"),
+                html.A(t("nav.methods", lang), href="#methods"),
+                html.A(t("nav.summary", lang), href="/summary"),
             ], className="topnav"),
+            language_switch(lang),
         ], className="topbar"),
+
 
         html.Main([
             # 01 - overview -------------------------------------------------
             html.Section([
                 html.Div([
-                    html.P("climate risk & human development observatory", className="eyebrow"),
-                    html.P("pilot \u00b7 france / india / united states", className="eyebrow"),
+                    html.P(t("hero.eyebrow", lang), className="eyebrow"),
+                    html.P(t("hero.scope", lang), className="eyebrow"),
                 ], className="eyebrow-row"),
 
                 html.H1([
-                    "where climate stress",
-                    html.Span("meets low development.", className="light"),
+                    t("hero.title_a", lang),
+                    html.Span(t("hero.title_b", lang), className="light"),
                 ]),
 
                 html.Div([
                     html.Div([
                         html.P([
-                            "A regional observatory built from NASA climate records, "
-                            "population grids and subnational development data. Every "
-                            "region is scored for ", html.B("hazard"), ", ",
-                            html.B("exposure"), " and ", html.B("vulnerability"),
-                            ", then set against its level of human development. "
-                            "Click a map to inspect a place.",
+                            t("hero.lede_a", lang),
+                            html.B(t("measure.hazard.chip", lang)), ", ",
+                            html.B(t("measure.exposure.chip", lang)), t("misc.and", lang),
+                            html.B(t("measure.vulnerability.chip", lang)),
+                            t("hero.lede_b", lang),
                         ], className="lede"),
                         html.A(
-                            ["read the two-minute summary ", html.Span("\u2192")],
+                            [t("hero.summary_link", lang), html.Span("\u2192")],
                             href="/summary",
                             className="hero-link",
                         ),
@@ -993,33 +999,35 @@ def layout() -> html.Div:
                     html.Div([
                         html.Div([
                             html.Span(f"{N_REGIONS}", className="stat-value"),
-                            html.Span("admin-1 regions", className="stat-label"),
+                            html.Span(t("stat.regions", lang), className="stat-label"),
                         ], className="stat"),
                         html.Div([
                             html.Span(f"{N_COUNTRIES}", className="stat-value"),
-                            html.Span("countries in the pilot", className="stat-label"),
+                            html.Span(t("stat.countries", lang), className="stat-label"),
                         ], className="stat"),
                         html.Div([
-                            html.Span(f"{TOTAL_POPULATION:.2f}bn", className="stat-value"),
-                            html.Span("people covered", className="stat-label"),
+                            html.Span(f"{num(TOTAL_POPULATION, 2, lang)}{BILLION_SUFFIX[lang]}",
+                                      className="stat-value"),
+                            html.Span(t("stat.people", lang), className="stat-label"),
                         ], className="stat"),
                         html.Div([
                             html.Span(RHO_TEXT, className="stat-value"),
-                            html.Span("hazard-SHDI rank correlation", className="stat-label"),
+                            html.Span(t("stat.rho", lang), className="stat-label"),
                         ], className="stat"),
                     ], className="stats"),
                 ], className="hero-bottom"),
             ], className="hero", id="top"),
 
+
             # Controls ------------------------------------------------------
             html.Div([
                 html.Div([
                     html.Div([
-                        html.Span("view by country", className="control-label"),
+                        html.Span(t("controls.view", lang), className="control-label"),
                         dcc.RadioItems(
                             id="country-view",
-                            options=[{"label": label, "value": value}
-                                     for value, label in COUNTRY_CHOICES],
+                            options=[{"label": t(f"country.{value}", lang), "value": value}
+                                     for value, _ in COUNTRY_CHOICES],
                             value="all",
                             inline=True,
                             className="chips",
@@ -1028,11 +1036,11 @@ def layout() -> html.Div:
                         ),
                     ], className="control-block"),
                     html.Div([
-                        html.Span("measure shown on the map", className="control-label"),
+                        html.Span(t("controls.measure", lang), className="control-label"),
                         dcc.RadioItems(
                             id="measure",
-                            options=[{"label": label, "value": value}
-                                     for value, label in MEASURE_CHOICES],
+                            options=[{"label": t(f"measure.{key}.chip", lang), "value": value}
+                                     for value, key in MEASURE_CHOICES],
                             value="risk_equal",
                             inline=True,
                             className="chips",
@@ -1041,112 +1049,84 @@ def layout() -> html.Div:
                         ),
                     ], className="control-block"),
                     html.Div([
-                        html.Span("find a region", className="control-label"),
+                        html.Span(t("controls.find", lang), className="control-label"),
                         dcc.Dropdown(
                             id="region-select",
                             options=region_options,
                             value=TOP_REGION,
                             clearable=False,
                             searchable=True,
-                            placeholder="search a region",
+                            placeholder=t("controls.search", lang),
                             className="region-dropdown",
                         ),
                     ], className="control-block control-region"),
                 ], className="controls-grid"),
             ], className="controls", id="controls"),
 
+
             # 02 - map ------------------------------------------------------
             html.Section([
                 html.Div([
                     html.Span("02", className="section-num"),
-                    html.H2("the map.", className="section-title"),
-                    html.P(
-                        "Three countries, one shared colour scale when they are shown "
-                        "together. Pick a country above to enlarge its map and see "
-                        "internal differences.",
-                        className="section-desc",
-                    ),
+                    html.H2(t("map.title", lang), className="section-title"),
+                    html.P(t("map.desc", lang), className="section-desc"),
                 ], className="section-head"),
                 html.Div(map_panels, className="map-grid"),
-                html.Div(build_legend("risk_equal", "all"), id="map-legend", className="map-legend"),
-                html.P(build_map_note("risk_equal", "all"), id="map-note", className="map-note"),
+                html.Div(build_legend("risk_equal", "all", lang), id="map-legend", className="map-legend"),
+                html.P(build_map_note("risk_equal", "all", lang), id="map-note", className="map-note"),
             ], className="section", id="map"),
 
             # 03 - ranking --------------------------------------------------
             html.Section([
                 html.Div([
                     html.Span("03", className="section-num"),
-                    html.H2("the ranking.", className="section-title"),
+                    html.H2(t("ranking.title", lang), className="section-title"),
                     html.P([
-                        "The ten regions with ",
+                        t("ranking.desc_a", lang),
                         html.Span(initial_heading, id="rank-heading"),
-                        ". Click a row to load it in the profile at the bottom of the page.",
+                        t("ranking.desc_b", lang),
                     ], className="section-desc"),
                 ], className="section-head"),
                 html.Div(initial_rows, id="rank-list", className="rank-list"),
                 dcc.Store(id="rank-store", data=initial_ids),
             ], className="section", id="ranking"),
 
+
             # 04 - relationship ---------------------------------------------
             html.Section([
                 html.Div([
                     html.Span("04", className="section-num"),
-                    html.H2("the relationship.", className="section-title"),
-                    html.P(
-                        "Hazard against development. The dashed lines mark the study "
-                        "medians; the ring marks the region you selected.",
-                        className="section-desc",
-                    ),
+                    html.H2(t("relation.title", lang), className="section-title"),
+                    html.P(t("relation.desc", lang), className="section-desc"),
                 ], className="section-head"),
                 html.Div([
                     html.Div([
                         dcc.Graph(
                             id="scatter-graph",
-                            figure=build_scatter(TOP_REGION, "all"),
+                            figure=build_scatter(TOP_REGION, "all", lang),
                             config={"displayModeBar": False, "responsive": True},
                         ),
-                        html.P(
-                            "Each dot is one admin-1 region. High SHDI sits high on the "
-                            "y-axis; high hazard sits to the right. The pattern runs "
-                            "downward: more hazard, less development.",
-                            className="chart-caption",
-                        ),
+                        html.P(t("relation.caption", lang), className="chart-caption"),
                     ], className="chart-panel"),
                     html.Div([
                         html.Span(RHO_TEXT, className="finding-big"),
-                        html.Span(
-                            "Spearman rank correlation between climate hazard and SHDI, "
-                            "across the 99 regions with development data.",
-                            className="finding-label",
-                        ),
+                        html.Span(t("relation.finding", lang), className="finding-label"),
                         html.Ul([
                             html.Li([
-                                html.B("medians"),
-                                html.Span(
-                                    "SHDI 0.786 in high-hazard regions vs 0.936 in "
-                                    "low-hazard regions (Mann-Whitney p = 1.4e-06)."
-                                ),
+                                html.B(t("relation.medians", lang)),
+                                html.Span(t("relation.medians_text", lang)),
                             ]),
                             html.Li([
-                                html.B("within"),
-                                html.Span(
-                                    "A one-SD rise in hazard goes with -0.21 SD of "
-                                    "SHDI inside countries (95% CI -0.32 to -0.11)."
-                                ),
+                                html.B(t("relation.within", lang)),
+                                html.Span(t("relation.within_text", lang)),
                             ]),
                             html.Li([
-                                html.B("by country"),
-                                html.Span(
-                                    "Slope -0.22 in India, -0.14 in the USA and +0.01 "
-                                    "in France, where hazard range is narrow."
-                                ),
+                                html.B(t("relation.by_country", lang)),
+                                html.Span(t("relation.by_country_text", lang)),
                             ]),
                             html.Li([
-                                html.B("concentration"),
-                                html.Span(
-                                    "The top 10% most hazardous regions hold 1.38x "
-                                    "their population share of person-days of heat."
-                                ),
+                                html.B(t("relation.concentration", lang)),
+                                html.Span(t("relation.concentration_text", lang)),
                             ]),
                         ], className="finding-list"),
                     ], className="finding"),
@@ -1157,28 +1137,18 @@ def layout() -> html.Div:
             html.Section([
                 html.Div([
                     html.Span("05", className="section-num"),
-                    html.H2("one place.", className="section-title"),
-                    html.P(
-                        "The chosen region in absolute numbers, and where it sits in "
-                        "the distribution. The diamond is its country median.",
-                        className="section-desc",
-                    ),
+                    html.H2(t("profile.title", lang), className="section-title"),
+                    html.P(t("profile.desc", lang), className="section-desc"),
                 ], className="section-head"),
                 html.Div([
-                    html.Div(detail_rows(TOP_REGION), id="region-detail", className="profile-card"),
+                    html.Div(detail_rows(TOP_REGION, lang), id="region-detail", className="profile-card"),
                     html.Div([
                         dcc.Graph(
                             id="profile-graph",
-                            figure=build_profile_chart(TOP_REGION),
+                            figure=build_profile_chart(TOP_REGION, lang),
                             config={"displayModeBar": False, "responsive": True},
                         ),
-                        html.P(
-                            "Bars show percentile position among the pilot regions that "
-                            "have data for that measure, from 0 (lowest) to 100 (highest). "
-                            "The dotted line is the study median, the diamond is the "
-                            "country median. Hover to read the raw values.",
-                            className="chart-caption",
-                        ),
+                        html.P(t("profile.caption", lang), className="chart-caption"),
                     ], className="chart-panel"),
                 ], className="split section-body"),
             ], className="section", id="profile"),
@@ -1187,30 +1157,19 @@ def layout() -> html.Div:
             html.Section([
                 html.Div([
                     html.Span("06", className="section-num"),
-                    html.H2("methods & data.", className="section-title"),
-                    html.P(
-                        "How the index is built, and the limits of what it can say. "
-                        "The full statistical report is in the repository.",
-                        className="section-desc",
-                    ),
+                    html.H2(t("methods.title", lang), className="section-title"),
+                    html.P(t("methods.desc", lang), className="section-desc"),
                 ], className="section-head"),
                 html.Div([
                     html.Div([
-                        html.H3(heading),
-                        html.P(text),
+                        html.H3(t(heading, lang)),
+                        html.P(t(text, lang)),
                     ], className="method")
                     for heading, text in METHODS
                 ], className="methods-grid"),
                 html.Div([
-                    html.H3("Read this before quoting a number"),
-                    html.P(
-                        "These are associations, not causal effects. Climate, history, "
-                        "institutions and geography are entangled, and this pilot "
-                        "cannot separate them. Development data are missing for 6 of "
-                        "the 105 regions, so development tests use 99. Boundaries are "
-                        "ADM1 units, not lived neighbourhoods; a large region can hide "
-                        "a hot city. Use the ranking as a screening tool, not a verdict."
-                    ),
+                    html.H3(t("methods.caveat_title", lang)),
+                    html.P(t("methods.caveat_text", lang)),
                 ], className="caveat"),
                 html.P(
                     "NASA POWER (MERRA-2) \u00b7 GHS-POP 2020 (JRC) \u00b7 geoBoundaries "
@@ -1222,31 +1181,32 @@ def layout() -> html.Div:
             # Read further: the written summary and the full report. --------
             html.Div([
                 html.Div([
-                    html.Span("read further", className="next-kicker"),
-                    html.H2("the written argument.", className="next-title"),
+                    html.Span(t("next.kicker", lang), className="next-kicker"),
+                    html.H2(t("next.title", lang), className="next-title"),
                 ], className="next-head"),
                 html.Div([
                     html.A([
-                        html.Span("two-minute summary", className="next-link-title"),
-                        html.Span("the question, four findings, limits", className="next-link-meta"),
+                        html.Span(t("next.summary_title", lang), className="next-link-title"),
+                        html.Span(t("next.summary_meta", lang), className="next-link-meta"),
                     ], href="/summary", className="next-link"),
                     html.A([
-                        html.Span("full report \u2197", className="next-link-title"),
-                        html.Span("html \u00b7 opens in this tab", className="next-link-meta"),
-                    ], href="/report", className="next-link"),
+                        html.Span(t("next.report_title", lang), className="next-link-title"),
+                        html.Span(t("next.report_meta", lang), className="next-link-meta"),
+                    ], href=report_href, className="next-link"),
                     html.A([
-                        html.Span("report.pdf \u2193", className="next-link-title"),
-                        html.Span("print layout", className="next-link-meta"),
-                    ], href="/report.pdf", className="next-link"),
+                        html.Span(t("next.pdf_title", lang), className="next-link-title"),
+                        html.Span(t("next.pdf_meta", lang), className="next-link-meta"),
+                    ], href=pdf_href, className="next-link"),
                 ], className="next-links"),
             ], className="next-band"),
         ], className="shell"),
 
         html.Footer([
-            html.Span("climate risk & human development observatory \u00b7 pilot edition"),
-            html.Span("python \u00b7 postgis \u00b7 plotly"),
+            html.Span(t("footer.line", lang)),
+            html.Span(t("footer.stack", lang)),
         ], className="footer shell"),
     ], className="page")
+
 
 
 # ---------------------------------------------------------------------------
@@ -1261,11 +1221,35 @@ def create_app() -> dash.Dash:
         title="Climate Risk Observatory",
         update_title=None,
     )
-    application.layout = layout()
+
+    # A function, not a fixed tree: Dash calls it on every /_dash-layout
+    # request, so the page is rebuilt in the language of the reader.
+    application.layout = lambda: layout(current_lang())
 
     # The written summary and the report files are plain Flask pages, not
     # Dash layouts: they never change, so they do not need callbacks.
     register_report_routes(application.server)
+
+    @application.server.after_request
+    def _remember_language(response):
+        """Keep the chosen language for the next page.
+
+        The switch links to ``?lang=fr`` (or ``en``). Remembering it in a
+        cookie means the choice follows the reader from the dashboard to the
+        summary and back without putting it in every URL.
+        """
+        chosen = request.args.get("lang")
+        if chosen and normalize(chosen) in LANGS:
+            response.set_cookie(
+                COOKIE_NAME,
+                normalize(chosen),
+                max_age=60 * 60 * 24 * 365,
+                samesite="Lax",
+            )
+        # The layout is language-dependent and must never come from a cache.
+        if request.path == "/_dash-layout":
+            response.headers["Cache-Control"] = "no-store"
+        return response
 
     @application.callback(
         Output("map-FRA", "figure"),
@@ -1283,6 +1267,7 @@ def create_app() -> dash.Dash:
         Input("country-view", "value"),
     )
     def _update_view(indicator, view):
+        lang = current_lang()
         indicator = indicator or "risk_equal"
         view = view or "all"
 
@@ -1290,7 +1275,7 @@ def create_app() -> dash.Dash:
         height = 560 if view != "all" else 320
 
         figures = {
-            iso3: build_country_map(indicator, iso3, bounds, height)
+            iso3: build_country_map(indicator, iso3, bounds, height, lang)
             for iso3 in COUNTRY_CODES
         }
         classes = {}
@@ -1302,14 +1287,15 @@ def create_app() -> dash.Dash:
                 name += " map-panel-wide"
             classes[iso3] = name
 
-        rows, ids, heading = build_ranking(indicator, view)
+        rows, ids, heading = build_ranking(indicator, view, lang)
         return (
             figures["FRA"], figures["IND"], figures["USA"],
             classes["FRA"], classes["IND"], classes["USA"],
-            build_legend(indicator, view),
-            build_map_note(indicator, view),
+            build_legend(indicator, view, lang),
+            build_map_note(indicator, view, lang),
             rows, ids, heading,
         )
+
 
     @application.callback(
         Output("region-select", "value"),
@@ -1373,7 +1359,7 @@ def create_app() -> dash.Dash:
         Input("region-select", "value"),
     )
     def _update_detail(region_id):
-        return detail_rows(region_id)
+        return detail_rows(region_id, current_lang())
 
     @application.callback(
         Output("scatter-graph", "figure"),
@@ -1381,14 +1367,14 @@ def create_app() -> dash.Dash:
         Input("country-view", "value"),
     )
     def _update_scatter(region_id, view):
-        return build_scatter(region_id, view or "all")
+        return build_scatter(region_id, view or "all", current_lang())
 
     @application.callback(
         Output("profile-graph", "figure"),
         Input("region-select", "value"),
     )
     def _update_profile(region_id):
-        return build_profile_chart(region_id)
+        return build_profile_chart(region_id, current_lang())
 
     return application
 

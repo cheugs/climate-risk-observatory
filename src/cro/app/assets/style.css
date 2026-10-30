@@ -85,7 +85,7 @@ body {
   z-index: 60;
   height: var(--bar);
   display: grid;
-  grid-template-columns: minmax(150px, 230px) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(150px, 230px) minmax(0, 1fr) auto auto;
   align-items: stretch;
   background: var(--bg);
   border-bottom: 1px solid var(--line);
@@ -167,6 +167,43 @@ body {
 
 .topnav a:hover {
   border-bottom-color: var(--ink);
+}
+
+/* Language switch: always visible, including on phones where the section
+   links are hidden. Two plain links, the active one underlined. */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px;
+  border-left: 1px solid var(--line);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.lang-option {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+  line-height: 1;
+}
+
+.lang-option:hover {
+  color: var(--ink);
+}
+
+.lang-option.is-current {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--ink);
+}
+
+.lang-sep {
+  color: var(--muted);
+  opacity: 0.45;
+  line-height: 1;
 }
 
 .page {
@@ -1077,7 +1114,7 @@ body {
   }
 
   .topbar {
-    grid-template-columns: minmax(130px, 190px) minmax(0, 1fr);
+    grid-template-columns: minmax(130px, 190px) minmax(0, 1fr) auto;
   }
 
   .hero-bottom,
@@ -1129,7 +1166,7 @@ body {
   }
 
   .topbar {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     border-right: 0;
   }
 

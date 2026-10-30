@@ -19,7 +19,7 @@ What actually has to be uploaded:
 | `src/` + `config/` | < 1 MB | the application |
 | `data/processed/dashboard_regions.parquet` | 0.6 MB | the dashboard data |
 | `outputs/tables/*.csv` | < 1 MB | summary page numbers |
-| `outputs/report/report.html` + `.pdf` | 9.5 MB | the written report |
+| `outputs/report/report(.fr).html` + `.pdf` | 19 MB | the written report, both languages |
 | `requirements-deploy.txt` | < 1 KB | runtime packages only |
 
 Everything else (`data/raw`, `data/cache`, most of `data/processed`,
@@ -102,6 +102,10 @@ name depends on your service name):
 - `/summary` - the reading page
 - `/report` - the full HTML report
 - `/report.pdf` - the PDF
+- `/summary?lang=fr`, `/report/fr`, `/report/fr.pdf` - the French versions
+
+Every page has an EN / FR switch in the header; the choice is kept in a
+`cro_lang` cookie.
 
 The first visit after a quiet period takes about a minute while Render starts
 the service. That is normal on the free plan.

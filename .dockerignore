@@ -23,6 +23,7 @@ tests/
 report/_freeze/
 report/.quarto/
 report/generated/
+report/generated_fr/
 
 *.log
 .env

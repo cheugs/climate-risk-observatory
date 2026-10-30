@@ -1,0 +1,445 @@
+---
+title: "Risque climatique et développement humain"
+subtitle: "Quelles régions admin-1 portent la plus lourde charge climatique, et comment cela se rapporte-t-il au développement ?"
+author: "DS01 - Observatoire du risque climatique & du développement humain"
+date: today
+date-format: "D MMMM YYYY"
+lang: fr
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    embed-resources: true
+    include-in-header: lang-switch-fr.html
+    theme:
+      light: [cosmo, theme.scss]
+    fig-cap-location: bottom
+    tbl-cap-location: top
+    link-external-newwindow: true
+  pdf:
+    toc: true
+    number-sections: true
+    geometry:
+      - margin=2.2cm
+    colorlinks: true
+execute:
+  enabled: false
+---
+
+```{=html}
+<style>
+.callout-note { border-left: 4px solid #2f6f8f; background: #f2f7fa; padding: 10px 14px; margin: 14px 0; }
+.callout-warn { border-left: 4px solid #c8553d; background: #fdf4f2; padding: 10px 14px; margin: 14px 0; }
+.small { font-size: 0.9em; color: #4a5a6a; }
+</style>
+```
+
+## Synthèse {.unnumbered}
+
+Ce rapport pose une question simple dont la réponse est compliquée : **quels lieux sur Terre conjuguent un climat rude et le moins de ressources pour y faire face ?** Nous y répondons pour 105 régions admin-1 de trois pays pilotes — la France, l'Inde et les États-Unis —, soit 1,8 milliard de personnes. Le pipeline est conçu pour que le même code puisse être appliqué aux quelque 3 700 régions admin-1 du monde sans être réécrit.
+
+Quatre constats ressortent.
+
+1. **L'exposition climatique est concentrée, pas répartie uniformément.** Les 10 % de régions les plus exposées à l'aléa concentrent 62 % de tous les jours-personnes de chaleur extrême tout en abritant 45 % de la population — un ratio de concentration de **1,38** (IC à 95 % : 1,21 à 1,75).
+2. **Un aléa élevé va de pair avec un faible développement.** L'IDH-S médian est de **0,786** dans la moitié la plus exposée des régions et de **0,936** dans la moitié la moins exposée (Mann-Whitney p = 1,4 × 10⁻⁶, δ de Cliff = −0,56, effet important).
+3. **L'écart résiste à la comparaison entre régions d'un même pays.** Une fois que les effets fixes pays absorbent toutes les différences entre la France, l'Inde et les États-Unis, une hausse d'un écart-type de l'aléa reste associée à **−0,21** écart-type d'IDH-S (IC à 95 % : −0,32 à −0,11). L'estimation groupée de −0,69 est environ trois fois plus grande, ce qui indique que l'essentiel de l'écart brut est *inter-pays*, et non intra-pays.
+4. **Le classement est robuste mais non causal.** Quatre façons différentes de construire l'indice de risque produisent des classements régionaux corrélés à ρ ≥ 0,96. Aucune n'identifie pour autant un effet causal du climat sur le développement.
+
+La lecture politique est directe. L'argent et l'attention de l'adaptation devraient suivre les régions du coin supérieur droit de la carte de double exposition : aléa élevé *et* faible développement. Dans ce pilote, ce coin est dominé par le nord et l'est de l'Inde, avec une poignée d'États américains chauds et à faible revenu, et aucune région française.
+
+{{< include generated_fr/summary.md >}}
+
+## La question et pourquoi elle compte
+
+Le risque climatique est généralement discuté à l'échelle des pays. Or un pays est rarement uniforme : l'écart d'exposition à la chaleur entre le Rajasthan et le Kerala est plus grand que l'écart entre beaucoup de pays. Le développement est tout aussi inégal à l'intérieur des frontières. Toute politique qui cible « l'Inde » ou « les États-Unis » dépensera l'argent au mauvais endroit.
+
+Ce projet travaille donc au niveau **admin-1** — États, provinces et régions —, qui est l'échelle la plus fine à laquelle les données de climat, de population et de développement sont toutes disponibles de façon fiable pour l'essentiel du monde.
+
+Nous posons trois questions :
+
+- **Q1. Où le stress climatique est-il le plus élevé ?** Mesuré par un indice d'aléa construit à partir de six indicateurs couvrant la chaleur, la sécheresse et les pluies extrêmes.
+- **Q2. Qui est exposé ?** Mesuré en jours-personnes de chaleur extrême, qui combinent l'intensité de la chaleur d'un lieu et le nombre de personnes qui y vivent.
+- **Q3. L'exposition recoupe-t-elle le faible développement ?** Mesuré avec l'indice de développement humain infranational (IDH-S), d'abord sur l'ensemble des régions, puis à l'intérieur de chaque pays.
+
+La dernière question est la plus importante pour l'action publique, et la plus facile à traiter de travers. Une corrélation naïve entre climat et pauvreté ne fait souvent que redécouvrir l'histoire coloniale et géographique : les pays chauds ont tendance à être plus pauvres. Pour dire quelque chose d'utile, il faut comparer des régions qui partagent un même gouvernement national, un même système fiscal et un même institut statistique.
+
+::: {.callout-warn}
+**Ce que ce rapport ne prétend pas.** Tous les résultats sont des associations. Nous n'estimons pas l'effet causal du climat sur le développement, et nous ne pouvons pas exclure qu'un troisième facteur — la géographie, les institutions, l'histoire — détermine les deux. La section 9 en discute en détail.
+:::
+
+## Données
+
+### Sources et couverture
+
+| Couche | Source | Résolution | Année | Licence |
+|---|---|---|---|---|
+| Limites administratives | geoBoundaries (gbOpen) | polygones ADM1 | version 2024 | CC-BY 4.0 |
+| Climat quotidien | NASA POWER (MERRA-2) | séries temporelles ponctuelles | 1991-2023 | ouvert, sans clé |
+| Population | GHS-POP R2023A | 30 secondes d'arc (~1 km) | 2020 | CC-BY 4.0 |
+| Développement infranational | Global Data Lab SHDI | admin-1 | dernière version disponible | gratuit pour la recherche |
+| Contexte national | Banque mondiale WDI | pays | 2010-2023 | CC-BY 4.0 |
+
+Les trois pays ont été choisis à dessein, non par commodité. La France est un pays tempéré à revenu élevé doté d'un système statistique solide. Les États-Unis sont à revenu élevé mais très divers sur le plan continental, avec des territoires dispersés dans le Pacifique et les Caraïbes. L'Inde est un pays tropical à revenu intermédiaire de la tranche inférieure, où l'exposition à la chaleur est déjà sévère. Ensemble, ils obligent le pipeline à gérer des qualités de données, des géométries et des conventions de nommage très différentes avant de passer à l'échelle.
+
+### Comment les données climatiques ont été construites
+
+NASA POWER renvoie une série temporelle quotidienne par point. Nous plaçons des points d'échantillonnage dans chaque région selon une grille à 1°, puis en conservons un nombre qui croît avec la superficie de la région (un point pour 40 000 km², entre 1 et 8 points). Les points sont choisis par *échantillonnage du point le plus éloigné*, afin qu'ils se répartissent dans la région au lieu de s'agglutiner près de son centre. Cela compte pour des pays comme les États-Unis, où un seul centroïde ne décrirait ni l'Alaska ni la Floride.
+
+Cela a produit **308 points d'échantillonnage** : 16 en France, 90 en Inde et 202 aux États-Unis. Chaque point a été téléchargé du 1er janvier 1991 au 31 décembre 2023 — 12 053 relevés quotidiens, soit 10 164 années-points après suppression des années incomplètes.
+
+Les valeurs quotidiennes sont transformées en six indicateurs annuels d'aléa :
+
+- **Jours de chaleur (HD35)** — jours où la température maximale est ≥ 35 °C.
+- **Nuits tropicales (TR25)** — nuits où la température minimale est ≥ 25 °C.
+- **Plus longue séquence sèche (CDD)** — plus longue suite de jours avec des précipitations < 1 mm.
+- **Bilan hydrique (WBAL)** — précipitations annuelles moins évapotranspiration de référence annuelle.
+- **Pluie journalière maximale (Rx1day)** — précipitation quotidienne maximale de l'année.
+- **Jours très humides (R50)** — jours avec plus de 50 mm de pluie.
+
+L'évapotranspiration n'est pas fournie par NASA POWER : elle est estimée avec l'**équation de Hargreaves**, qui ne requiert que les températures quotidiennes maximale et minimale ainsi que la latitude. C'est une pratique courante en génie de l'irrigation, documentée dans `src/cro/ingest/climate.py`.
+
+::: {.callout-note}
+**Un contrôle de cohérence qu'il vaut la peine de répéter.** L'indicateur qui devrait être le plus élevé dans le désert du Thar l'est. Le Rajasthan compte en moyenne **169 jours de chaleur par an** ; le Kerala, sur la côte de la mousson, en compte **zéro**. Le bilan hydrique du Rajasthan est de **−1 342 mm**, celui du Meghalaya de **+2 067 mm**. Si ces chiffres avaient été inversés, le reste du rapport n'aurait aucune valeur.
+:::
+
+### Population et exposition
+
+GHS-POP donne le nombre de personnes dans chaque cellule d'environ 1 km pour 2020. Deux sommes différentes sont calculées :
+
+- **Totaux régionaux** — somme de tous les pixels de population situés dans le polygone de la région.
+- **Poids des points** — chaque personne est rattachée au point climatique le *plus proche*, de sorte que l'on sait quelles personnes un point représente.
+
+Les deux méthodes devraient concorder, et c'est le cas : **1 803,1 millions** par les polygones contre **1 805,5 millions** par affectation au point le plus proche, soit un écart de 0,1 %. Cette concordance est le contrôle qui rend la mesure de l'exposition fiable ; elle est rejouée automatiquement par `cro validate`.
+
+### Données de développement et problème d'appariement
+
+Global Data Lab publie l'IDH-S pour des unités infranationales, mais utilise ses propres noms et, pour la France, les limites régionales d'avant 2016. Les noms ont été appariés en trois passes :
+
+1. correspondance exacte après normalisation des accents et de la ponctuation (93 régions),
+2. une courte liste manuelle de différences connues comme *Odisha → Orissa* (4 régions),
+3. appariement flou au-dessus d'un seuil de similarité de 0,85 (2 régions).
+
+**99 des 105 régions** ont été appariées. Les six autres sont le Ladakh (créé en 2019, après la série d'IDH-S) et cinq territoires américains. Ces régions restent sur les cartes d'aléa et d'exposition mais sont exclues des modèles de développement plutôt que remplies par la moyenne de leur pays — les remplir inventerait une variation intra-pays qui n'existe pas.
+
+## Méthode
+
+### Construction des trois composantes
+
+Chaque indicateur est converti en **rang centile**, ce qui le ramène à un score de 0 à 1 sans supposer une distribution normale. Les rangs sont préférés à une normalisation min-max parce que les indicateurs climatiques comportent des valeurs extrêmes : un seul désert comprimerait sinon toutes les autres régions vers zéro.
+
+L'indice d'**aléa** est délibérément construit en trois parties plutôt qu'en une moyenne plate :
+
+$$
+\text{Aléa} = \tfrac{1}{3}\left(H_{\text{chaleur}} + H_{\text{sécheresse}} + H_{\text{humidité}}\right)
+$$
+
+où $H_{\text{chaleur}}$ fait la moyenne des jours de chaleur et des nuits tropicales, $H_{\text{sécheresse}}$ celle de la durée des sécheresses et du bilan hydrique (inversé), et $H_{\text{humidité}}$ celle de Rx1day et des jours très humides. Garder les trois séparés permet à un désert et à une côte de mousson d'avoir tous deux un score élevé sans que les raisons soient moyennées.
+
+L'**exposition** est le nombre de jours-personnes de chaleur extrême :
+
+$$
+\text{Exposition}_r = \sum_{p \in r} \text{population}_p \times \text{HD35}_p
+$$
+
+Il s'agit d'une quantité physique, pas d'un indice : une région de 100 000 personnes et de 40 jours de chaleur contribue à hauteur de 4 millions de jours-personnes. Pour la combiner aux deux autres composantes, nous prenons le rang centile de son logarithme, faute de quoi l'Uttar Pradesh dominerait chaque figure.
+
+La **vulnérabilité** est un moins le rang centile de l'IDH-S. Un faible développement signifie une moindre capacité à se préparer à un choc, à y faire face et à s'en remettre.
+
+Le **risque composite** suit le cadre du GIEC sous forme de produit :
+
+$$
+\text{Risque} = \text{Aléa} \times \text{Exposition} \times \text{Vulnérabilité}
+$$
+
+Un produit plutôt qu'une somme, parce que la définition du GIEC exige les trois : un aléa sans personne exposée n'est pas une catastrophe, et une exposition sans aléa n'est qu'un lieu très peuplé. Une version additive et une version pondérée par ACP sont conservées comme tests de robustesse.
+
+### Quatre versions de l'indice
+
+| Version | Pondération de l'aléa | Raison d'être |
+|---|---|---|
+| `equal` | poids égaux pour chaleur, sécheresse et humidité | le résultat principal |
+| `additive` | poids égaux, mais risque = moyenne des composantes | teste si la forme produit compte |
+| `pca` | première composante principale | laisse les données choisir les poids |
+| `popclimate` | climat pondéré par la population | teste si la moyenne surfacique masque la chaleur urbaine |
+
+Si les quatre versions produisent le même classement, la conclusion ne dépend pas de nos choix arbitraires. La section 8 montre que c'est le cas.
+
+### Approche statistique
+
+- **H1 (concentration) :** comparer la part d'exposition des 10 % de régions les plus exposées à l'aléa avec leur part de population, avec un intervalle de confiance bootstrap (2 000 rééchantillonnages).
+- **H2 (aléa et développement) :** test U de Mann-Whitney sur l'IDH-S des régions au-dessus et en dessous de l'aléa médian, plus le δ de Cliff comme taille d'effet et le ρ de Spearman.
+- **H3 (intra-pays) :** MCO avec effets fixes pays, variables standardisées, erreurs robustes HC3. Le modèle M4 décompose l'aléa en ses composantes chaleur, sécheresse et humidité.
+- **H4 (spatial) :** I de Moran avec contiguïté reine, calculé **séparément par pays**, car la France, l'Inde et les États-Unis ne partagent pas de frontière. LISA identifie les grappes locales significatives.
+- **H5 (robustesse) :** corrélation de Spearman des classements régionaux entre les quatre versions de l'indice.
+
+## Résultats : où se situe le stress
+
+### L'aléa est un phénomène tropical et subtropical, avec des exceptions
+
+![Indice d'aléa climatique par région](../outputs/maps/map_01_hazard.png)
+
+La carte de l'aléa est dominée par l'Inde. L'aléa moyen est de 0,67 en Inde, 0,45 aux États-Unis et 0,32 en France. Le Gujarat, le Rajasthan et le Madhya Pradesh conjuguent une très forte chaleur et un bilan hydrique fortement négatif — les deux conditions qui fragilisent l'agriculture.
+
+Les États-Unis montrent l'intérêt de travailler sous le niveau national. Les moyennes nationales masquent un gradient ouest-est, du sud-ouest chaud et sec au nord-est tempéré, et elles masquent entièrement l'Alaska, qui obtient un score d'aléa élevé pour des raisons d'extrêmes de saison froide plutôt que de chaleur.
+
+{{< include generated_fr/t02.md >}}
+
+### L'exposition à la chaleur est massivement indienne
+
+![Exposition de la population à la chaleur extrême](../outputs/maps/map_06_exposure.png)
+
+Les jours-personnes de chaleur extrême racontent une autre histoire que l'indice d'aléa, car ils pondèrent par la population :
+
+| Pays | Régions | Population | Jours-personnes de chaleur (Md/an) | Part |
+|---|---|---|---|---|
+| Inde | 36 | 1 400 M | 146,2 | 96,0 % |
+| États-Unis | 56 | 339 M | 5,9 | 3,9 % |
+| France | 13 | 64 M | 0,2 | 0,1 % |
+
+L'Inde concentre 96 % de l'exposition à la chaleur du pilote. Ce n'est pas un artefact de modélisation : cela découle directement de 1,4 milliard de personnes vivant dans un climat chaud. L'Uttar Pradesh à lui seul contribue pour 27,5 milliards de jours-personnes par an, plus que l'ensemble des États-Unis.
+
+{{< include generated_fr/t01.md >}}
+
+### Développement
+
+![Indice de développement humain infranational](../outputs/maps/map_07_shdi.png)
+
+L'IDH-S va de 0,614 au Bihar à 0,961 dans les meilleurs États américains. La variation intra-pays est substantielle : l'Inde s'étend de 0,61 à 0,81, les États-Unis de 0,88 à 0,96, la France de 0,87 à 0,96. La plage indienne est plus large que l'écart entre les moyennes américaine et française, ce qui est précisément pourquoi une analyse au niveau des pays serait trompeuse ici.
+
+![Indice de vulnérabilité](../outputs/maps/map_08_vulnerability.png)
+
+En retournant le développement, on obtient la couche de vulnérabilité. La structure est l'image miroir de la carte d'IDH-S, et c'est tout l'intérêt : dans ce cadre, la vulnérabilité n'est pas un jugement séparé sur les institutions, c'est l'absence du développement humain qui rend l'adaptation possible.
+
+### Risque composite
+
+![Risque climatique composite](../outputs/maps/map_09_risk.png)
+
+Le haut du classement des risques est entièrement indien :
+
+{{< include generated_fr/t03.md >}}
+
+Le Bihar, l'Uttar Pradesh et le Gujarat combinent les trois composantes. Ils sont chauds, ils sont peuplés et ils ont un faible IDH-S. La structure ne repose pas sur une seule valeur aberrante : **les dix sont indiens, et huit d'entre eux se trouvent dans la plaine indo-gangétique, le centre de l'Inde ou l'ouest**.
+
+À l'autre extrémité, les régions les moins à risque sont des régions françaises et des États du nord des États-Unis — aléa modéré, développement élevé —, plus quelques régions américaines peu peuplées où l'exposition est faible malgré un aléa élevé.
+
+### Double exposition
+
+![Double exposition : aléa élevé et faible développement](../outputs/maps/map_11_double_exposure.png)
+
+En séparant l'aléa et la vulnérabilité à leurs médianes, la carte devient directement utilisable par un décideur. Le groupe rouge foncé — aléa élevé *et* faible développement — est le groupe prioritaire pour le financement de l'adaptation. Il est concentré en Inde, avec quelques régions américaines, et aucune région française.
+
+## Tests d'hypothèses
+
+### H1 : l'exposition est concentrée
+
+Classons les régions de la plus à la moins exposée à l'aléa et cumulons. Si l'exposition était répartie uniformément, les 10 % supérieurs détiendraient 10 % des jours-personnes de chaleur. Ils en détiennent **62 %**, tout en abritant **45 %** de la population.
+
+- Ratio de concentration : **1,38**
+- IC à 95 % bootstrap : **1,21 à 1,75**
+- Interprétation : le dixième de régions le plus exposé à l'aléa porte environ 38 % de jours-personnes de chaleur de plus par habitant que ne le prédirait sa part de population.
+
+![Courbe de concentration de l'exposition](../outputs/figures/fig_03_lorenz.png)
+
+La courbe s'écarte de la diagonale et l'intervalle de confiance reste au-dessus de 1. La concentration est réelle, quoique modérée — ce n'est pas l'inégalité extrême que le mot « concentré » pourrait suggérer.
+
+### H2 : un aléa élevé va de pair avec un développement plus faible
+
+| Groupe | Régions | IDH-S médian |
+|---|---|---|
+| Au-dessus de l'aléa médian | 49 | 0,786 |
+| À l'aléa médian ou en dessous | 50 | 0,936 |
+
+- Mann-Whitney U = 536, **p = 1,4 × 10⁻⁶**
+- δ de Cliff = **−0,56** (important : la probabilité qu'une région à fort aléa tirée au hasard ait un IDH-S plus faible qu'une région à faible aléa tirée au hasard est d'environ 78 %)
+- ρ de Spearman = **−0,59** (p = 1,4 × 10⁻¹⁰)
+
+![Aléa et développement](../outputs/figures/fig_01_hazard_vs_development.png)
+
+Le nuage de points montre clairement le mécanisme : ce n'est pas une seule droite, mais trois nuages distincts. L'Inde se situe en bas à droite (aléa élevé, faible IDH-S), les États-Unis au milieu en haut, la France en haut à gauche. La corrélation globale est donc en partie un fait *inter-pays*.
+
+{{< include generated_fr/t05.md >}}
+
+## L'écart résiste-t-il à la comparaison intra-pays ?
+
+C'est le test central du rapport. Comparer des régions de pays différents confond le climat avec tout le reste de ce qui distingue les pays. Ajouter des effets fixes pays supprime toutes les différences inter-pays et pose la question : *en Inde, aux États-Unis, en France, les régions plus chaudes ont-elles un développement plus faible ?*
+
+![Comparaison des coefficients entre modèles](../outputs/figures/fig_04_coefficients.png)
+
+| Modèle | Spécification | Coefficient d'aléa (IC à 95 %) |
+|---|---|---|
+| M1 | groupé, sans contrôles | −0,69 (−0,82 à −0,57) |
+| M2 | + densité, latitude, éloignement | −0,28 (−0,61 à +0,04) |
+| M3 | + effets fixes pays | **−0,21 (−0,31 à −0,11)** |
+| M4 | aléa décomposé en chaleur/sécheresse/humidité | chaleur −0,15, sécheresse −0,01, humidité −0,15 |
+
+Lire les modèles dans l'ordre est tout l'intérêt de l'exercice :
+
+- Sans contrôles, l'aléa semble un prédicteur puissant (β = −0,69).
+- L'ajout de la densité, de la latitude et de l'éloignement retire environ 60 % de cette association : le coefficient tombe à −0,28. L'intervalle de confiance inclut désormais zéro (p = 0,09) : les contrôles ont absorbé une bonne part du signal et ce qui reste est imprécis.
+- Les effets fixes pays donnent ensuite **−0,21** avec un intervalle bien plus étroit (p < 0,001). L'estimation bouge à peine par rapport à M2, mais elle devient beaucoup plus précise, car comparer des régions d'un même pays élimine une importante source de bruit.
+- La décomposition de l'aléa en trois parties (M4) montre que **la chaleur (−0,15) et les pluies extrêmes (−0,15) comptent toutes deux**, tandis que la composante sécheresse est indistinguable de zéro (−0,01). Le résultat « humidité » mérite d'être formulé avec soin : l'« aléa humide » désigne ici les fortes pluies journalières, c'est-à-dire l'exposition aux tempêtes et à la mousson, non la sécheresse.
+
+Ainsi, environ **70 % de l'association brute est inter-pays**, et **30 % survit à la comparaison intra-pays**. L'association intra-pays est plus faible mais non nulle, et c'est la partie sur laquelle l'action publique peut réellement agir.
+
+{{< include generated_fr/t07.md >}}
+
+### La structure intra-pays n'est pas uniforme
+
+![Pentes intra-pays](../outputs/figures/fig_05_country_slopes.png)
+
+| Pays | Régions | Pente | IC à 95 % | p |
+|---|---|---|---|---|
+| Inde | 35 | **−0,223** | −0,360 à −0,087 | 0,001 |
+| États-Unis | 51 | **−0,143** | −0,220 à −0,066 | 0,0003 |
+| France | 13 | +0,012 | −0,248 à +0,271 | 0,93 |
+
+L'Inde présente le gradient intra-pays le plus fort, les États-Unis un gradient modéré, et la France aucun. C'est une histoire cohérente plutôt qu'un accident statistique : dans un pays riche et tempéré, le stress climatique n'est pas assez sévère pour déterminer où se fixe le développement humain, et les écarts de revenu régionaux sont portés par les systèmes urbains et l'histoire industrielle. En Inde, la dépendance agricole et l'exposition à la chaleur sont étroitement liées.
+
+La pente plate de la France appelle aussi une mise en garde sur la taille de l'échantillon. Avec 13 régions, l'intervalle de confiance est assez large pour contenir à la fois zéro et un effet négatif modéré : « pas de relation en France » doit donc se lire « pas assez de régions pour trancher ».
+
+## Agrégation spatiale
+
+Une corrélation traite chaque région comme indépendante. Elles ne le sont pas : une sécheresse au Rajasthan se poursuit au Gujarat, et une région pauvre a généralement des voisins pauvres. L'I de Moran mesure si des valeurs semblables se retrouvent côte à côte.
+
+Comme les trois pays pilotes ne partagent pas de frontière, une statistique globale unique capterait surtout « l'Inde n'est pas la France ». Nous rapportons donc l'I de Moran **à l'intérieur de chaque pays**, avec contiguïté reine et en écartant les îles sans voisin terrestre.
+
+{{< include generated_fr/t09.md >}}
+
+Les chiffres racontent une histoire plus intéressante que « tout s'agrège » :
+
+- **L'aléa est spatialement agrégé partout**, et le plus fortement aux États-Unis (I = 0,69) et en France (0,55), l'Inde venant ensuite (0,47). Les trois sont significatifs à p ≤ 0,001. La valeur indienne est plus faible parce que le pays contient plusieurs zones climatiques distinctes — le nord himalayen, la côte de mousson et l'ouest aride — qui se touchent.
+- **Le développement s'agrège aux États-Unis (0,55) et en Inde (0,38)** mais **pas en France (−0,31, p = 0,07)**. La France est l'exception qui confirme la règle : régions riches et moins riches alternent au lieu de former une seule ceinture pauvre, si bien qu'une région à faible IDH-S est souvent voisine d'une région à fort IDH-S.
+- **Le risque composite s'agrège fortement aux États-Unis (0,72) et en France (0,59)** mais faiblement en Inde (0,25). Cela mérite qu'on s'y arrête. L'*aléa* indien est spatialement lisse, mais le risque dépend aussi de la population et du développement, qui changent brutalement d'un État à l'autre. Deux États voisins peuvent donc avoir des scores de risque très différents alors que tous deux sont chauds.
+- **L'exposition s'agrège aux États-Unis (0,61) et en France (0,51)** et à peine en Inde (0,20), pour la même raison : la population indienne est répartie sur presque tout le pays, si bien que la forte exposition n'est pas confinée à un coin.
+
+![Grappes locales de risque composite](../outputs/maps/map_10_lisa.png)
+
+La carte LISA ajoute ce qu'une statistique globale ne peut pas donner : elle sépare les vraies grappes des valeurs aberrantes. Dix régions américaines forment une grappe significative de risque élevé-élevé et neuf une grappe faible-faible ; en Inde, sept régions forment une grappe élevé-élevé et cinq une grappe de faible développement faible-faible. Une région à risque élevé entourée de voisins à faible risque (une valeur aberrante élevé-faible, dont il existe un cas en Inde) pose un problème d'action publique différent d'une région à risque élevé au sein d'une grappe à risque élevé : la première peut être une anomalie locale, la seconde exige une coordination régionale.
+
+::: {.callout-note}
+**Pourquoi les îles sont écartées, non imputées.** La contiguïté reine donne à Hawaï, à la Corse, à Lakshadweep et aux territoires américains une liste de voisins vide. Leur attribuer un voisin artificiel modifierait l'I de Moran pour des raisons sans rapport avec la géographie. Ils sont exclus de la statistique et signalés « sans voisins » sur la carte.
+:::
+
+## Robustesse
+
+### Le classement ne dépend pas de nos choix de pondération
+
+![Stabilité du classement entre versions de l'indice](../outputs/figures/fig_06_rank_stability.png)
+
+Toutes les corrélations de Spearman deux à deux entre les quatre versions de l'indice sont **supérieures ou égales à 0,96**, et le recouvrement des vingt premières places est élevé dans chaque paire. Passer de poids égaux à des poids ACP, ou d'un produit à une somme, déplace quelques régions de quelques places mais ne rebat pas le classement.
+
+{{< include generated_fr/t06.md >}}
+
+C'est le résultat le plus rassurant du rapport. La construction d'un indice implique des dizaines de petites décisions ; le fait que la réponse bouge à peine lorsque ces décisions changent prouve que le signal sous-jacent est fort.
+
+### Ce qui change la réponse
+
+Trois choix *comptent* :
+
+1. **Pondération surfacique ou par la population du climat.** L'aléa pondéré par la surface décrit le territoire ; l'aléa pondéré par la population décrit ce que vivent les gens. Ils concordent dans la plupart des régions mais divergent dans les pays aux intérieurs vides (l'Alaska, les districts désertiques du Rajasthan).
+2. **L'entrée ou non de l'exposition dans le risque.** Retirer l'exposition transforme l'indice de risque en « aléa là où le développement est faible », ce qui fait remonter plusieurs régions américaines peu peuplées dans le classement.
+3. **Le seuil de chaleur.** 35 °C est un seuil agronomique et sanitaire courant, mais il est arbitraire. Un seuil de 30 °C ferait remonter la France et le nord des États-Unis ; un seuil de 40 °C concentrerait l'indice presque entièrement en Asie du Sud.
+
+## Discussion
+
+### Ce que signifient les résultats
+
+Les résultats soutiennent une affirmation précise et modérée : **l'aléa climatique et le faible développement humain se recoupent, et ce recoupement n'est pas seulement un artefact inter-pays.** En Inde et aux États-Unis, les régions plus chaudes ont un IDH-S plus faible, et la relation résiste aux contrôles de densité, de latitude et d'éloignement.
+
+L'ampleur compte. Les deux variables étant standardisées, un coefficient de −0,21 signifie qu'une hausse d'un écart-type de l'aléa à l'intérieur d'un pays est associée à environ un cinquième d'écart-type de moins d'IDH-S. Passer du 25e au 75e centile d'aléa est un pas plus grand (environ 1,35 écart-type), ce qui correspond à environ **0,28 écart-type** d'IDH-S. C'est significatif sans être écrasant : le climat est un facteur parmi d'autres, pas une destinée.
+
+### Ce qui en découle pour l'action publique
+
+- **Cibler des régions, pas des pays.** La carte de double exposition identifie exactement où le financement de l'adaptation a le meilleur rendement attendu par personne.
+- **La chaleur est la contrainte déterminante en Asie du Sud.** 96 % des jours-personnes de chaleur extrême du pilote sont en Inde. Les plans d'action contre la chaleur, les toits frais, les systèmes d'alerte précoce et les protections professionnelles sont les instruments pertinents, pas la « finance climatique » générique.
+- **Le développement *est* une capacité d'adaptation.** La vulnérabilité étant mesurée par un faible IDH-S, l'analyse implique que la santé, l'éducation et le revenu sont eux-mêmes des politiques d'adaptation — une conclusion cohérente avec la littérature sur l'adaptation.
+- **Les pays riches ont aussi des points chauds.** Le sud-ouest américain apparaît dans le groupe à fort aléa. Un revenu national élevé ne protège pas une région dont le développement local est inférieur à la moyenne nationale.
+
+### Limites
+
+Nous les énumérons honnêtement, car un rapport qui les masque est moins utile qu'un rapport qui les expose.
+
+1. **Association, pas causalité.** Les effets fixes pays contrôlent toutes les différences nationales invariantes dans le temps, mais pas les chocs variables dans le temps, et ils ne peuvent exclure une causalité inverse — des régions plus riches peuvent s'adapter d'une manière qui modifie l'exposition mesurée.
+2. **Un seul indicateur de développement.** L'IDH-S est un composite de santé, d'éducation et de revenu. Il ne saisit pas les inégalités *à l'intérieur* d'une région, qui déterminent souvent qui souffre lors d'une vague de chaleur. Des données infranationales de pauvreté (le SPID de la Banque mondiale) amélioreraient cela et constituent la prochaine étape évidente.
+3. **Population statique.** GHS-POP 2020 est appliqué à une référence climatique 2004-2023. Les régions en urbanisation rapide portent donc des poids de population de 2020 dans une moyenne climatique qui inclut 2004.
+4. **Échantillonnage grossier dans les grandes régions.** Jusqu'à huit points par région suffisent pour un État de la taille du Bihar et sont minces pour l'Alaska. Le nombre de points croît avec la superficie, mais pas avec l'hétérogénéité climatique.
+5. **Le seuil de 35 °C est un choix.** Il est défendable pour l'agriculture et la santé, mais un autre seuil donne une autre carte.
+6. **Sélection du pilote.** La France, l'Inde et les États-Unis ont été choisis pour éprouver le pipeline, non pour représenter le monde. Le ratio de concentration de 1,38 changera lorsque le pipeline sera étendu à tous les pays.
+7. **Millésime des limites.** Les polygones geoBoundaries et les régions GDL ne coïncident pas toujours (Ladakh, Dadra et Nagar Haveli et Daman et Diu fusionnés). Les règles d'agrégation sont documentées dans le fichier de correspondance.
+
+## Reproductibilité
+
+L'ensemble du pipeline tient en une commande :
+
+```bash
+cro all          # toutes les étapes, dans l'ordre
+cro validate     # contrôles du contrat de données (sortie non nulle en cas d'échec)
+cro export       # cartes et figures
+quarto render report/report.fr.qmd
+cro app          # tableau de bord sur http://127.0.0.1:8050
+```
+
+Chaque tableau intermédiaire est écrit dans `data/processed` au format Parquet, si bien qu'une étape peut être rejouée sans répéter les téléchargements. Les téléchargements sont mis en cache par requête, ce qui a permis au téléchargement climatique de 308 points de reprendre après une interruption.
+
+L'analyse charge depuis PostGIS lorsque la base de données tourne et se rabat sur Parquet sinon, ce qui signifie que le tableau de bord fonctionne sur un ordinateur portable sans base de données installée.
+
+{{< include generated_fr/validation.md >}}
+
+### Ce qui a été vérifié
+
+Au-delà des contrôles automatisés du contrat, trois vérifications manuelles de cohérence ont été faites à chaque étape :
+
+- Le Rajasthan a plus de jours de chaleur que le Kerala (169 contre 0).
+- Les deux méthodes de population concordent à 0,1 % près.
+- Le haut du classement des risques est stable entre les versions de l'indice (ρ ≥ 0,96).
+
+## Fichiers et comment s'y retrouver
+
+| Chemin | Contenu |
+|---|---|
+| `src/cro/ingest/` | téléchargeurs de limites, climat, population, développement |
+| `src/cro/features/build.py` | construction de l'aléa, de l'exposition, de la vulnérabilité et du risque |
+| `src/cro/analysis/` | statistiques descriptives, tests d'hypothèses, régression, statistiques spatiales |
+| `src/cro/viz/` | thème partagé, cartes statiques, graphiques, export |
+| `src/cro/app/` | tableau de bord Plotly Dash |
+| `src/cro/db/` | schéma PostGIS et chargeur |
+| `outputs/maps/` | 11 cartes statiques + 4 cartes interactives HTML |
+| `outputs/figures/` | 6 figures statistiques |
+| `outputs/tables/` | 9 tableaux CSV utilisés dans ce rapport |
+
+### Cartes interactives
+
+À ouvrir dans n'importe quel navigateur, sans Python :
+
+- `outputs/maps/map_web_risk.html` - risque composite
+- `outputs/maps/map_web_hazard.html` - aléa climatique
+- `outputs/maps/map_web_exposure.html` - jours-personnes de chaleur
+- `outputs/maps/map_web_shdi.html` - IDH infranational
+
+## Annexe : étendre au monde
+
+Le pilote est construit pour que le passage à l'échelle soit un changement de configuration, non une réécriture. Trois choses changent en passant de 3 pays à environ 150 :
+
+1. **Échantillonnage.** 3 700 régions à raison de 8 points chacune impliquent environ 15 000 requêtes NASA POWER. À 4 travailleurs parallèles et environ 2 s par requête, cela représente près de 2 heures, plus le stockage du cache.
+2. **Effets fixes.** Avec 150 pays, des erreurs standard regroupées au niveau pays deviennent fiables ; le code bascule déjà automatiquement vers elles au-delà de 20 pays.
+3. **Poids spatiaux.** À l'échelle mondiale, la contiguïté transfrontalière devient significative, si bien que l'I de Moran peut être calculé une fois globalement au lieu d'être calculé par pays.
+
+Une seconde extension est une annexe prospective au niveau des pays : des projections désagrégées issues du Copernicus Climate Data Store (CMIP6) permettraient de calculer le même indice pour 2050 sous SSP2-4.5 et SSP5-8.5. Elle est volontairement tenue hors de l'analyse principale, car mélanger observations et projections brouillerait la distinction entre ce qui est mesuré et ce qui est modélisé.
+
+## Références
+
+Global Data Lab. *Subnational Human Development Index (SHDI)*. Radboud University. <https://globaldatalab.org/shdi/>
+
+GIEC (2022). *Changement climatique 2022 : impacts, adaptation et vulnérabilité*. Contribution du Groupe de travail II au sixième rapport d'évaluation.
+
+NASA Langley Research Center. *POWER Project Data Access Viewer*. <https://power.larc.nasa.gov/>
+
+Pesaresi, M., et al. (2023). *GHS-POP R2023A - GHS population grid multitemporal (1975-2030)*. European Commission, JRC.
+
+Runfola, D., et al. (2020). geoBoundaries: A global database of political administrative boundaries. *PLOS ONE*, 15(4), e0231866.
+
+Banque mondiale. *World Development Indicators*. <https://databank.worldbank.org/source/world-development-indicators>
+
+Hargreaves, G. H., & Samani, Z. A. (1985). Reference crop evapotranspiration from temperature. *Applied Engineering in Agriculture*, 1(2), 96-99.
