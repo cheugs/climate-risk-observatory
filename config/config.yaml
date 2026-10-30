@@ -1,0 +1,90 @@
+# ---------------------------------------------------------------------------
+# Project settings
+# Everything that a reader might want to change lives here, not in the code.
+# ---------------------------------------------------------------------------
+
+project:
+  name: "Climate Risk & Human Development Observatory"
+  version: "0.1.0"
+
+  # Phase 1 pilot countries.
+  # We test the whole pipeline on three very different countries before
+  # running it for the whole world: a rich temperate country with huge
+  # internal differences (USA), a rich European country with overseas
+  # territories (FRA), and a lower-middle-income tropical country with
+  # strong heat exposure (IND).
+  pilot_iso3: ["FRA", "USA", "IND"]
+
+  # The second phase will use this list instead (["ALL"] means every country).
+  global_iso3: ["ALL"]
+
+climate:
+  # --- How the climate is sampled inside each region ---
+  # Each region gets at least one sample point and at most
+  # `max_points_per_region`. The number grows with the region's area
+  # (one point per `area_per_point_km2` square kilometres).
+  grid_degrees: 1.0
+  max_points_per_region: 8
+  area_per_point_km2: 40000
+
+  # NASA POWER requests are small, so we can run a few in parallel.
+  # Four threads is polite and still finishes the pilot quickly.
+  workers: 4
+
+  # Size of the box around a sample point used to count the population
+  # that the point represents (in degrees).
+  point_population_radius: 0.25
+
+  # Full history we download from NASA POWER (MERRA-2 based).
+  history_start: "1991-01-01"
+  history_end: "2023-12-31"
+
+  # The 20-year window used to describe today's climate.
+  baseline_start: 2004
+  baseline_end: 2023
+
+  # The window used to calculate the trend (change per decade).
+  trend_start: 1991
+  trend_end: 2023
+
+  # Thresholds used to turn daily data into hazard indicators.
+  heat_threshold_c: 35.0
+  tropical_night_c: 25.0
+  wet_day_mm: 50.0
+  dry_day_mm: 1.0
+
+population:
+  # GHS-POP is published for 2020 (R2023A).
+  year: 2020
+
+  # Regions below this population are kept in the database but flagged,
+  # because hazard averages for them are very noisy.
+  min_population: 1000
+
+analysis:
+  # A country needs at least this many regions before it can be used in a
+  # within-country (fixed effects) model.
+  min_regions_per_country: 5
+
+  # Bootstrap repetitions for confidence intervals.
+  bootstrap_iterations: 2000
+  random_seed: 42
+
+  # Significance levels.
+  alpha: 0.05
+  fdr_alpha: 0.05
+
+database:
+  # These match docker-compose.yml.
+  host: "localhost"
+  port: 5433
+  name: "cro"
+  user: "cro"
+  password: "cro"
+
+paths:
+  raw: "data/raw"
+  cache: "data/cache"
+  interim: "data/interim"
+  processed: "data/processed"
+  outputs: "outputs"

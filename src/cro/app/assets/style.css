@@ -1,0 +1,1231 @@
+/* ==========================================================================
+   Climate Risk & Human Development Observatory - dashboard styles
+   --------------------------------------------------------------------------
+   The look is borrowed from editorial portfolio sites: a sage paper
+   background, maroon ink, oversized lowercase headings, hairline rules and
+   a visible 12-column grid. Everything has square corners on purpose.
+
+   Structure of this file:
+   1. font + design tokens
+   2. page shell, grid overlay and top bar
+   3. hero and section headings
+   4. controls (country chips, measure chips, region menu)
+   5. map panels, legends and ranking list
+   6. charts and profile detail
+   7. methods, footer and responsive rules
+   ========================================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+
+/* 1. tokens --------------------------------------------------------------- */
+
+:root {
+  --ink: #6a0c06;          /* maroon: text, lines, highlights */
+  --bg: #b2c7ab;           /* sage: the paper */
+  --dark: #1a1512;         /* near-black for emphasis */
+  --panel: rgba(233, 237, 220, 0.22);
+  --line: rgba(106, 12, 6, 0.45);
+  --line-soft: rgba(106, 12, 6, 0.18);
+  --muted: rgba(106, 12, 6, 0.72);
+  --font: "Space Grotesk", "Segoe UI", Arial, sans-serif;
+  --bar: 56px;             /* height of the fixed top bar */
+}
+
+* {
+  box-sizing: border-box;
+  border-radius: 0 !important;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--bar) + 84px);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* 2. shell and top bar ---------------------------------------------------- */
+
+/* 12 hairline columns behind everything, like a printed layout grid. */
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  pointer-events: none;
+}
+
+.grid-overlay span {
+  border-left: 1px solid rgba(106, 12, 6, 0.11);
+}
+
+.grid-overlay span:last-child {
+  border-right: 1px solid rgba(106, 12, 6, 0.11);
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: var(--bar);
+  display: grid;
+  grid-template-columns: minmax(150px, 230px) minmax(0, 1fr) auto;
+  align-items: stretch;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  border-right: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+.brand span {
+  font-weight: 300;
+  opacity: 0.75;
+}
+
+/* Animated strip with the headline numbers, borrowed from a portfolio site. */
+.ticker {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--line);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+  animation: ticker 55s linear infinite;
+}
+
+.ticker-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 26px;
+  padding-right: 26px;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ticker-seg b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 18px;
+}
+
+.topnav a {
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+
+.topnav a:hover {
+  border-bottom-color: var(--ink);
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  padding-top: var(--bar);
+}
+
+.shell {
+  width: min(1480px, 100%);
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3.4vw, 44px);
+}
+
+/* 3. hero and section headings -------------------------------------------- */
+
+.hero {
+  padding: clamp(48px, 7vw, 96px) 0 44px;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 10px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero h1 {
+  margin: 26px 0 30px;
+  max-width: 17ch;
+  font-size: clamp(2.7rem, 7.2vw, 7rem);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+  text-transform: lowercase;
+}
+
+.hero h1 .light {
+  display: block;
+  font-weight: 300;
+  color: var(--dark);
+  opacity: 0.82;
+}
+
+.hero-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(24px, 5vw, 80px);
+  align-items: end;
+}
+
+.lede {
+  margin: 0;
+  max-width: 48ch;
+  font-size: clamp(14px, 1.3vw, 17px);
+  line-height: 1.55;
+}
+
+.lede b {
+  font-weight: 600;
+}
+
+/* A quiet link from the opening statement to the written summary. */
+.hero-copy {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.hero-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-link span {
+  transition: transform 0.16s ease;
+}
+
+.hero-link:hover span {
+  transform: translateX(4px);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+
+.stat {
+  padding: 14px 14px 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.stat:nth-child(odd) {
+  border-right: 1px solid var(--line-soft);
+  padding-right: 18px;
+}
+
+.stat:nth-child(even) {
+  padding-left: 18px;
+}
+
+.stat-value {
+  display: block;
+  font-size: clamp(1.7rem, 3vw, 2.9rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  display: block;
+  margin-top: 7px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.section {
+  padding: clamp(44px, 6vw, 78px) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) minmax(0, 340px);
+  gap: clamp(14px, 2.4vw, 36px);
+  align-items: start;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.section-num {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.section-title {
+  margin: 0;
+  font-size: clamp(2rem, 4.6vw, 4.2rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  text-transform: lowercase;
+}
+
+.section-desc {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 46ch;
+}
+
+.section-body {
+  margin-top: clamp(24px, 3vw, 40px);
+}
+
+.micro {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* 4. controls ------------------------------------------------------------- */
+
+.controls {
+  position: sticky;
+  top: var(--bar);
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0 12px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 2.3fr) minmax(0, 0.9fr);
+  gap: clamp(18px, 3vw, 42px);
+  align-items: start;
+}
+
+.control-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Dash 4 puts `labelClassName` on the inner text span, not on the option
+   label. Style the real label as the chip and flatten the inner span so the
+   border wraps the dot and the text together. */
+.chips .dash-options-list-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 !important;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 11px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.chips .dash-options-list-option:hover {
+  background: rgba(106, 12, 6, 0.08);
+}
+
+.chips .dash-options-list-option-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.chips .dash-options-list-option-text,
+.chips .chip {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+}
+
+.chips .dash-options-list-option-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 7px;
+  height: 7px;
+  margin: 0 !important;
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+}
+
+.chips .dash-options-list-option[aria-selected="true"],
+.chips .dash-options-list-option.selected {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+.chips .dash-options-list-option[aria-selected="true"] .dash-options-list-option-checkbox,
+.chips .dash-options-list-option.selected .dash-options-list-option-checkbox {
+  background: var(--bg);
+  border-color: var(--bg);
+}
+
+.chips .dash-options-list-option:focus-within {
+  outline: 2px solid var(--dark);
+  outline-offset: 2px;
+}
+
+/* Dash 4 renders its dropdown as a button plus a portalled menu. */
+.dash-dropdown-wrapper {
+  position: relative;
+}
+
+.dash-dropdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dash-dropdown:hover,
+.dash-dropdown[data-state="open"] {
+  background: rgba(106, 12, 6, 0.07);
+}
+
+.dash-dropdown:focus-visible {
+  outline: 2px solid var(--dark);
+  outline-offset: 2px;
+}
+
+.dash-dropdown-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-dropdown-value-item {
+  padding: 0;
+  background: transparent;
+}
+
+.dash-dropdown-trigger-icon {
+  flex: 0 0 auto;
+  color: var(--ink);
+}
+
+.dash-dropdown-content {
+  margin-top: 4px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 11px;
+  box-shadow: 0 8px 24px rgba(26, 21, 18, 0.12);
+}
+
+.dash-dropdown-search-container {
+  border-bottom: 1px solid var(--line-soft);
+  padding: 4px 8px;
+}
+
+.dash-dropdown-search {
+  width: 100%;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 11px;
+  outline: none;
+}
+
+.dash-dropdown-search::placeholder {
+  color: rgba(106, 12, 6, 0.5);
+}
+
+.dash-dropdown-options {
+  padding: 4px 0;
+}
+
+.dash-dropdown-option {
+  padding: 7px 10px;
+  color: var(--ink) !important;
+  cursor: pointer;
+}
+
+.dash-dropdown-option * {
+  color: inherit !important;
+}
+
+.dash-dropdown-option:hover,
+.dash-dropdown-option[aria-selected="true"] {
+  background: var(--ink);
+  color: var(--bg) !important;
+}
+
+
+/* 5. maps, legend and ranking --------------------------------------------- */
+
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 24px);
+}
+
+.map-panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 12px 12px 8px;
+}
+
+.map-panel.is-hidden {
+  display: none;
+}
+
+.map-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.map-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 7px;
+}
+
+.map-country {
+  margin: 0;
+  font-size: clamp(1rem, 1.45vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-transform: lowercase;
+}
+
+.map-meta {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.map-legend {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px 24px;
+  align-items: end;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.legend-head {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: baseline;
+}
+
+.legend-title {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.legend-bar {
+  height: 8px;
+  border: 1px solid var(--line);
+}
+
+.legend-ticks {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 5px;
+  grid-column: 1 / -1;
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.map-note {
+  margin: 12px 0 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 90ch;
+}
+
+.rank-list {
+  border-bottom: 1px solid var(--line-soft);
+  margin-top: 8px;
+}
+
+.rank-row {
+  display: grid;
+  grid-template-columns: 46px minmax(150px, 1.1fr) minmax(90px, 2fr) 84px;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  padding: 11px 8px;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease;
+}
+
+.rank-row:hover,
+.rank-row:focus-visible {
+  background: var(--ink);
+  color: var(--bg);
+  outline: none;
+}
+
+.rank-n {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.rank-row:hover .rank-n,
+.rank-row:focus-visible .rank-n {
+  color: var(--bg);
+  opacity: 0.8;
+}
+
+.rank-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rank-name {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-country {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rank-row:hover .rank-country,
+.rank-row:focus-visible .rank-country {
+  color: var(--bg);
+  opacity: 0.8;
+}
+
+.rank-bar {
+  position: relative;
+  display: block;
+  height: 7px;
+  background: rgba(106, 12, 6, 0.13);
+  overflow: hidden;
+}
+
+.rank-bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--ink);
+}
+
+.rank-row:hover .rank-bar,
+.rank-row:focus-visible .rank-bar {
+  background: rgba(178, 199, 171, 0.2);
+}
+
+.rank-row:hover .rank-bar span,
+.rank-row:focus-visible .rank-bar span {
+  background: var(--bg);
+}
+
+.rank-value {
+  text-align: right;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* 6. charts and profile --------------------------------------------------- */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: clamp(16px, 2.4vw, 32px);
+  align-items: start;
+}
+
+.chart-panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 10px 12px 6px;
+}
+
+.chart-caption {
+  margin: 0;
+  padding: 8px 2px 4px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.finding {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.finding-big {
+  display: block;
+  font-size: clamp(2.4rem, 4.6vw, 4rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+.finding-label {
+  display: block;
+  margin: 6px 0 20px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  max-width: 32ch;
+  line-height: 1.6;
+}
+
+.finding-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line-soft);
+}
+
+.finding-list li {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.finding-list b {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.profile-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: clamp(16px, 2vw, 24px);
+  height: 100%;
+}
+
+.profile-country {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.profile-name {
+  margin: 6px 0 18px;
+  font-size: clamp(1.8rem, 3.4vw, 3.1rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+
+.detail {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.detail:nth-child(odd) {
+  padding-right: 14px;
+  border-right: 1px solid var(--line-soft);
+}
+
+.detail:nth-child(even) {
+  padding-left: 14px;
+}
+
+.detail-label {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.detail-value {
+  display: block;
+  margin-top: 3px;
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem);
+  line-height: 1.1;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.detail-value small {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 7. methods, footer and responsive --------------------------------------- */
+
+.methods-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 3vw, 40px);
+}
+
+.method h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.method p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.caveat {
+  margin-top: clamp(24px, 3vw, 36px);
+  border: 1px solid var(--line);
+  padding: clamp(16px, 2vw, 24px);
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  background: rgba(26, 21, 18, 0.04);
+}
+
+.caveat h3 {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.caveat p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 90ch;
+}
+
+.data-line {
+  margin-top: 18px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Closing band: the written summary and the report files. */
+.next-band {
+  display: grid;
+  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 56px);
+  align-items: start;
+  padding: clamp(36px, 5vw, 60px) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.next-kicker {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.next-title {
+  margin: 10px 0 0;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-transform: lowercase;
+}
+
+.next-links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.next-link {
+  display: grid;
+  gap: 7px;
+  padding: 16px 16px 18px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 0.16s ease;
+}
+
+.next-link:hover {
+  background: rgba(26, 21, 18, 0.06);
+}
+
+.next-link-title {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.next-link-meta {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.footer {
+  padding: 26px 0 34px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.footer a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Dash gives every Graph `height: 100%`, which collapses inside an
+   auto-height panel. Give each chart an explicit height instead. */
+#map .map-panel .dash-graph {
+  height: 320px !important;
+}
+
+#map .map-panel-wide .dash-graph {
+  height: 560px !important;
+}
+
+#relationship .dash-graph {
+  height: 500px !important;
+}
+
+#profile .dash-graph {
+  height: 340px !important;
+}
+
+/* Plotly fills its container, so remove any extra white treatment. */
+.js-plotly-plot,
+.plot-container {
+  background: transparent !important;
+}
+
+.js-plotly-plot .plotly .modebar {
+  display: none !important;
+}
+
+/* Responsive ------------------------------------------------------------- */
+
+@media (max-width: 1080px) {
+  .topnav {
+    display: none;
+  }
+
+  .topbar {
+    grid-template-columns: minmax(130px, 190px) minmax(0, 1fr);
+  }
+
+  .hero-bottom,
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .next-band {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .section-head {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .section-desc {
+    grid-column: 2;
+    margin-top: 10px;
+  }
+
+  .map-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .map-panel-wide {
+    grid-column: auto;
+  }
+
+  .controls-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .control-region {
+    grid-column: 1 / -1;
+  }
+
+  .methods-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --bar: 50px;
+  }
+
+  .ticker {
+    display: none;
+  }
+
+  .topbar {
+    grid-template-columns: minmax(0, 1fr);
+    border-right: 0;
+  }
+
+  .brand {
+    justify-content: space-between;
+    border-right: 0;
+    font-size: 22px;
+  }
+
+  .brand::after {
+    content: "observatory";
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .grid-overlay {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .grid-overlay span:nth-child(n + 5) {
+    display: none;
+  }
+
+  #map .map-panel .dash-graph {
+    height: 320px !important;
+  }
+
+  #map .map-panel-wide .dash-graph {
+    height: 380px !important;
+  }
+
+  .controls {
+    position: static;
+  }
+
+  .controls-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stat:nth-child(odd) {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .stat:nth-child(even) {
+    padding-left: 0;
+  }
+
+  .section-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .section-num {
+    margin-bottom: 4px;
+  }
+
+  .section-desc {
+    grid-column: auto;
+  }
+
+  .rank-row {
+    grid-template-columns: 34px minmax(0, 1fr) 70px;
+    gap: 10px;
+  }
+
+  .rank-bar {
+    display: none;
+  }
+
+  .caveat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .next-links {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .ticker-track {
+    animation: none;
+  }
+}

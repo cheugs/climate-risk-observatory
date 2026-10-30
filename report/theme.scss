@@ -1,0 +1,63 @@
+/*-- scss:defaults --*/
+
+// Colours taken from the project's Python theme, so the report, the maps and
+// the dashboard look like one product rather than three.
+$ink:      #1b2a3a;
+$muted:    #6b7c8f;
+$accent:   #c8553d;
+$blue:     #2f6f8f;
+$body-bg:  #ffffff;
+
+$font-family-sans-serif: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+$body-color: $ink;
+$link-color: $blue;
+$headings-color: $ink;
+
+/*-- scss:rules --*/
+
+h1, h2, h3 {
+  letter-spacing: -0.01em;
+}
+
+h1.title {
+  font-weight: 700;
+  color: $ink;
+}
+
+p.subtitle {
+  color: $muted;
+  font-weight: 400;
+}
+
+// The section numbers in the table of contents are useful but should not
+// shout.
+#TOC > ul > li > a {
+  font-size: 0.92rem;
+}
+
+// Tables in this report are wide; a little more breathing room helps.
+table {
+  font-size: 0.86rem;
+}
+
+thead th {
+  border-bottom: 2px solid $blue !important;
+  font-weight: 600;
+}
+
+// Figures get a thin frame so screenshots of white maps do not float.
+.figure img,
+figure img {
+  border: 1px solid #e2e8ef;
+  border-radius: 4px;
+}
+
+figcaption {
+  color: $muted;
+  font-size: 0.82rem;
+}
+
+// Long code lines in the reproducibility section.
+pre {
+  font-size: 0.8rem;
+}

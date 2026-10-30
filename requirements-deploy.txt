@@ -1,0 +1,23 @@
+# Runtime dependencies only. The analysis pipeline (rasterio, libpysal,
+# matplotlib, kaleido) is not needed to serve the dashboard and the report,
+# so it is left out to keep the free deployment small and fast.
+#
+# Versions are pinned to the ones the project was tested with.
+
+dash==4.5.0
+plotly==7.1.0
+Flask==3.1.3
+
+pandas==3.1.0
+numpy==2.5.4
+pyarrow==26.0.0
+
+geopandas==1.2.0
+shapely==2.2.0
+pyproj==3.8.0
+
+statsmodels==0.15.0
+scipy==1.18.1
+
+PyYAML==6.0.3
+python-dotenv==1.2.4

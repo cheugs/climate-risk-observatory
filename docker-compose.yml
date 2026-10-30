@@ -1,0 +1,25 @@
+# PostGIS runs in a container so we do not have to install a database by hand.
+# Start it with:  docker compose up -d
+# Stop it with:   docker compose down
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    container_name: cro_postgis
+    environment:
+      POSTGRES_DB: cro
+      POSTGRES_USER: cro
+      POSTGRES_PASSWORD: cro
+    ports:
+      # We use 5433 on the host so it does not clash with a local PostgreSQL.
+      - "5433:5432"
+    volumes:
+      - cro_pgdata:/var/lib/postgresql/data
+      - ./src/cro/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cro -d cro"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cro_pgdata:

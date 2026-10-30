@@ -1,0 +1,28 @@
+# Files Docker does not need to send to the build context.
+# Without this, a local build would upload the raw downloads and the cache.
+
+.venv/
+.git/
+.gitignore
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+
+data/raw/
+data/cache/
+data/interim/
+data/processed/*
+!data/processed/dashboard_regions.parquet
+
+outputs/figures/
+outputs/maps/
+notebooks/
+docs/
+tests/
+
+report/_freeze/
+report/.quarto/
+report/generated/
+
+*.log
+.env

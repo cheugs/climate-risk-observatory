@@ -1,0 +1,125 @@
+# ---------------------------------------------------------------------------
+# Indicator registry
+#
+# Each entry says: what the indicator is called, what unit it is in, and
+# which direction is "bad". Keeping this in one file means the report, the
+# maps and the app all describe indicators in the same way.
+#
+# direction: "worse_higher" = larger values mean more climate risk
+#            "better_higher" = larger values mean better development
+# ---------------------------------------------------------------------------
+
+climate:
+  - code: hd35
+    label: "Days with maximum temperature at or above 35 C"
+    short: "Heat days"
+    unit: "days/year"
+    group: heat
+    direction: worse_higher
+    formula: "count of days where Tmax >= 35 C"
+
+  - code: tr25
+    label: "Nights with minimum temperature at or above 25 C"
+    short: "Tropical nights"
+    unit: "nights/year"
+    group: heat
+    direction: worse_higher
+    formula: "count of days where Tmin >= 25 C"
+
+  - code: cdd
+    label: "Longest dry spell"
+    short: "Dry spell"
+    unit: "days/year"
+    group: dry
+    direction: worse_higher
+    formula: "longest run of consecutive days with precipitation < 1 mm"
+
+  - code: wbal
+    label: "Water balance (rainfall minus potential evapotranspiration)"
+    short: "Water balance"
+    unit: "mm/year"
+    group: dry
+    direction: worse_lower
+    formula: "annual precipitation - annual ET0"
+
+  - code: rx1d
+    label: "Heaviest one-day rainfall"
+    short: "Rx1day"
+    unit: "mm"
+    group: wet
+    direction: worse_higher
+    formula: "maximum daily precipitation in the year"
+
+  - code: r50
+    label: "Days with rainfall above 50 mm"
+    short: "Very wet days"
+    unit: "days/year"
+    group: wet
+    direction: worse_higher
+    formula: "count of days with precipitation > 50 mm"
+
+  - code: hd35_trend
+    label: "Change in heat days per decade"
+    short: "Heat trend"
+    unit: "days/decade"
+    group: heat
+    direction: worse_higher
+    formula: "slope of annual heat days on year, 1991-2023"
+
+development:
+  # GDL = Global Data Lab subnational database
+  # WB  = World Bank World Development Indicators (national)
+  - code: shdi
+    label: "Subnational Human Development Index"
+    source: GDL
+    direction: better_higher
+
+  - code: poverty_headcount
+    label: "Poverty headcount ratio"
+    source: GDL
+    direction: worse_higher
+
+  - code: life_expectancy
+    label: "Life expectancy at birth"
+    source: GDL
+    direction: better_higher
+
+  - code: mean_years_schooling
+    label: "Mean years of schooling"
+    source: GDL
+    direction: better_higher
+
+  - code: gni_pc
+    label: "Gross national income per capita"
+    source: GDL
+    direction: better_higher
+
+  - code: electricity_access
+    label: "Population with electricity access"
+    source: WB
+    direction: better_higher
+
+  - code: sanitation_access
+    label: "Population with safely managed sanitation"
+    source: WB
+    direction: better_higher
+
+  - code: stunting
+    label: "Children under 5 who are stunted"
+    source: WB
+    direction: worse_higher
+
+  - code: urban_share
+    label: "Urban population share"
+    source: WB
+    direction: neutral
+
+  - code: agri_employment
+    label: "Employment in agriculture"
+    source: WB
+    direction: neutral
+
+  - code: gdp_pc
+    label: "GDP per capita, PPP"
+    source: WB
+    direction: better_higher

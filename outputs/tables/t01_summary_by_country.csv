@@ -1,0 +1,5 @@
+group,n_regions,population_m,hazard_mean,exposure_mean,vulnerability_mean,risk_median,person_days_heat_bn
+ALL,105,1803.072,0.505,0.505,0.495,0.08,152.292
+FRA,13,64.25,0.317,0.387,0.481,0.046,0.152
+IND,36,1399.785,0.666,0.6,0.818,0.509,146.24
+USA,56,339.036,0.445,0.471,0.277,0.052,5.9

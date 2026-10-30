@@ -1,0 +1,41 @@
+region_name,country,iso3,population,hazard_equal,exposure_score,vulnerability,risk_equal,rank_equal,group
+Bihār,India,IND,125319851.3931,0.8492,0.981,0.9899,0.8246,1.0,highest_risk
+Uttar Pradesh,India,IND,232207343.2526,0.8444,1.0,0.9646,0.8146,2.0,highest_risk
+Gujarāt,India,IND,70885187.5525,0.9127,0.9714,0.8889,0.7881,3.0,highest_risk
+Madhya Pradesh,India,IND,84553483.1854,0.8603,0.9429,0.9495,0.7702,4.0,highest_risk
+Jhārkhand,India,IND,39222048.1081,0.8302,0.8667,0.9798,0.7049,5.0,highest_risk
+Odisha,India,IND,46669921.0211,0.8143,0.8857,0.9646,0.6957,6.0,highest_risk
+Andhra Pradesh,India,IND,53369715.3754,0.8333,0.9238,0.899,0.6921,7.0,highest_risk
+Mahārāshtra,India,IND,126390888.0533,0.8714,0.9905,0.7727,0.667,8.0,highest_risk
+Chhattīsgarh,India,IND,29682879.1595,0.8333,0.8476,0.9192,0.6493,9.0,highest_risk
+West Bengal,India,IND,100439237.1184,0.7635,0.9333,0.9091,0.6478,10.0,highest_risk
+Rājasthān,India,IND,80559259.5071,0.7683,0.9619,0.8586,0.6345,11.0,highest_risk
+Karnātaka,India,IND,70478338.6923,0.7587,0.9048,0.8384,0.5755,12.0,highest_risk
+Telangāna,India,IND,38998556.7322,0.7683,0.8762,0.8485,0.5711,13.0,highest_risk
+Assam,India,IND,35188288.0225,0.6984,0.819,0.9394,0.5374,14.0,highest_risk
+Tamil Nādu,India,IND,81509634.4153,0.7063,0.9524,0.7879,0.53,15.0,highest_risk
+Tripura,India,IND,4179707.792,0.7444,0.7619,0.9293,0.5271,16.0,highest_risk
+Haryāna,India,IND,29283711.5998,0.7524,0.8952,0.7727,0.5205,17.0,highest_risk
+Punjab,India,IND,31240292.1904,0.7349,0.9143,0.7576,0.509,18.0,highest_risk
+Delhi,India,IND,20704710.564,0.7825,0.8571,0.6869,0.4607,19.0,highest_risk
+Chandīgarh,India,IND,873648.1096,0.8214,0.7905,0.6667,0.4329,20.0,highest_risk
+New Hampshire,United States of America,USA,1401141.575,0.3183,0.2286,0.0051,0.0004,99.0,lowest_risk
+Massachusetts,United States of America,USA,7024898.8808,0.296,0.3143,0.0051,0.0005,98.0,lowest_risk
+Hawaii,United States of America,USA,1429299.0966,0.323,0.0905,0.0354,0.001,97.0,lowest_risk
+New Jersey,United States of America,USA,9040478.8033,0.35,0.0905,0.1162,0.0037,96.0,lowest_risk
+Vermont,United States of America,USA,639911.6192,0.2675,0.2381,0.0657,0.0042,95.0,lowest_risk
+Minnesota,United States of America,USA,5789411.4094,0.4111,0.5333,0.0202,0.0044,94.0,lowest_risk
+Maine,United States of America,USA,1370139.4959,0.2929,0.0905,0.1768,0.0047,93.0,lowest_risk
+Île-de-France,France,FRA,12090578.418,0.2968,0.4762,0.0354,0.005,92.0,lowest_risk
+Alaska,United States of America,USA,748178.1783,0.3071,0.0905,0.2374,0.0066,91.0,lowest_risk
+Rhode Island,United States of America,USA,1071311.1268,0.3333,0.1905,0.1616,0.0103,90.0,lowest_risk
+Connecticut,United States of America,USA,3619957.6756,0.3913,0.3524,0.0808,0.0111,89.0,lowest_risk
+Washington,United States of America,USA,7754071.9124,0.3524,0.4857,0.0657,0.0112,88.0,lowest_risk
+Colorado,United States of America,USA,5894251.3922,0.4381,0.6952,0.0505,0.0154,87.0,lowest_risk
+Oregon,United States of America,USA,4334673.8178,0.4349,0.4,0.101,0.0176,86.0,lowest_risk
+Bretagne,France,FRA,3332312.156,0.1825,0.219,0.4545,0.0182,85.0,lowest_risk
+District of Columbia,United States of America,USA,714814.8346,0.5063,0.419,0.0909,0.0193,84.0,lowest_risk
+Sikkim,India,IND,664272.2317,0.304,0.0905,0.7273,0.02,83.0,lowest_risk
+North Dakota,United States of America,USA,777069.4771,0.4222,0.3333,0.1515,0.0213,82.0,lowest_risk
+New York,United States of America,USA,19762510.097,0.254,0.4571,0.197,0.0229,81.0,lowest_risk
+Wisconsin,United States of America,USA,5921638.1587,0.327,0.3714,0.197,0.0239,80.0,lowest_risk

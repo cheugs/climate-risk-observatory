@@ -1,0 +1,7 @@
+version_a,version_b,n_regions,spearman_rho,p_value
+additive,equal,99,0.9725,0.0
+additive,pca,99,0.9673,0.0
+additive,popclimate,99,0.9678,0.0
+equal,pca,99,0.9617,0.0
+equal,popclimate,99,0.9981,0.0
+pca,popclimate,99,0.9607,0.0

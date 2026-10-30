@@ -1,0 +1,20 @@
+# Render blueprint. Connect the repository in Render, choose "Blueprint",
+# and Render reads this file: free plan, Python runtime, one command to start.
+#
+# The app needs almost no memory, but the free plan is 512 MB. If Render ever
+# restarts the service for using too much memory, move to the Starter plan or
+# use the PythonAnywhere instructions in docs/deploy.md.
+
+services:
+  - type: web
+    name: climate-risk-observatory
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-deploy.txt
+    startCommand: python -m cro.app.app
+    healthCheckPath: /summary
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: PYTHONPATH
+        value: src

@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local settings
+.env
+
+# Data is downloaded/cached, so we do not put it in git.
+# The pipeline can rebuild everything from the download scripts.
+data/raw/
+data/cache/
+data/interim/
+data/processed/*
+# One exception: the simplified dashboard table is small (0.6 MB) and lets a
+# fresh clone (or a free deployment) serve the app without re-running the
+# pipeline.
+!data/processed/dashboard_regions.parquet
+
+# Quarto build files
+report/_freeze/
+report/.quarto/
+report/report.html
+report/report.pdf
+report/generated/
+
+# Logs
+*.log
