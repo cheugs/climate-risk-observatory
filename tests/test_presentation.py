@@ -167,6 +167,7 @@ def test_summary_page_has_a_french_version():
     assert "1,38" in page           # French decimal comma
     assert "0,786" in page
     assert "/report/fr.pdf" in page
+    assert "lang-globe" in page
     assert "the summary" not in page
     assert 'href="/summary?lang=en"' in page
 
@@ -233,5 +234,6 @@ def test_dashboard_layout_switches_language():
     assert "the map." in english.data.decode("utf-8")
     assert "?lang=en" in french.data.decode("utf-8")
     assert "lang-option is-current" in french.data.decode("utf-8")
+    assert "lang-globe" in french.data.decode("utf-8")
     assert "Cache-Control" in french.headers
     assert french.headers["Cache-Control"] == "no-store"

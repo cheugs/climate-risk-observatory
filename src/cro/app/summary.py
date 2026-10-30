@@ -697,7 +697,9 @@ def _page(
     <a href="/summary" class="is-current" aria-current="page">{t("nav.summary", c["lang"])}</a>
     <a href="{report_href}">{c['footer_link_report']}</a>
   </nav>
-  <div class="lang-switch" role="group" aria-label="{t("misc.language", c["lang"])}">
+  <div class="lang-switch" role="group" aria-label="{t("misc.language", c["lang"])}"
+       title="{t('misc.language', c['lang'])}">
+    <span class="lang-globe" aria-hidden="true"></span>
     <a class="lang-option{' is-current' if c['lang'] == 'en' else ''}" href="/summary?lang=en"
        title="{t('misc.english', c['lang'])}"{' aria-current="true"' if c['lang'] == 'en' else ''}>EN</a>
     <span class="lang-sep" aria-hidden="true">/</span>

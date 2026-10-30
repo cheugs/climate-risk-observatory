@@ -893,13 +893,17 @@ def language_switch(lang: str, page: str = "/") -> html.Div:
             attributes["className"] = "lang-option"
         return html.A(label, href=f"{page}?lang={code}", title=title, **attributes)
 
+    globe = html.Span(className="lang-globe", **{"aria-hidden": "true"})
+
     return html.Div(
         [
+            globe,
             option("en", "EN", t("misc.english", lang)),
             html.Span("/", className="lang-sep", **{"aria-hidden": "true"}),
             option("fr", "FR", t("misc.french", lang)),
         ],
         className="lang-switch",
+        title=f"{t('misc.language', lang)}",
         **{"aria-label": t("misc.language", lang), "role": "group"},
     )
 
