@@ -1,5 +1,11 @@
 # Deploying the observatory for free
 
+The production deployment lives at
+<https://climate-risk-observatory.onrender.com> (Render free plan, service
+`climate-risk-observatory`, blueprint `render.yaml`). Pushing to `main` on
+GitHub redeploys it automatically. The notes below explain how it was set up
+and what to do if you want to move it.
+
 The app is a normal Flask server (Dash is mounted on it), so it needs a host
 that can run Python continuously. It does **not** need PostGIS, Docker, or the
 raw data: the dashboard reads the small simplified table in

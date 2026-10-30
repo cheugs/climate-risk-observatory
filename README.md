@@ -104,6 +104,17 @@ and explains which step to run.
 
 ## Deploy it for free
 
+The observatory is live on Render's free plan at
+**<https://climate-risk-observatory.onrender.com>**:
+
+- dashboard - <https://climate-risk-observatory.onrender.com/>
+- summary - <https://climate-risk-observatory.onrender.com/summary>
+- report - <https://climate-risk-observatory.onrender.com/report>
+- PDF - <https://climate-risk-observatory.onrender.com/report.pdf>
+
+The free instance sleeps after 15 minutes without visitors, so the first request may take about a
+minute; after that it is responsive. The URL is stable - it does not change between deploys.
+
 The app is an ordinary Flask server, so it runs on a free host. It reads `PORT` from the
 environment and binds to `0.0.0.0`; `requirements-deploy.txt` contains only the runtime packages,
 and `render.yaml` is a ready-made Render blueprint. The deployment needs the simplified dashboard
