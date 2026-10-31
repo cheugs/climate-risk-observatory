@@ -17,7 +17,6 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 CONFIG_PATH = PROJECT_ROOT / "config" / "config.yaml"
-INDICATORS_PATH = PROJECT_ROOT / "config" / "indicators.yaml"
 
 
 def load_config() -> dict:
@@ -37,12 +36,6 @@ def load_config() -> dict:
         cfg["paths"][key].mkdir(parents=True, exist_ok=True)
 
     return cfg
-
-
-def load_indicators() -> dict:
-    """Load the indicator registry (names, units, directions)."""
-    with open(INDICATORS_PATH, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
 
 
 def database_url(cfg: dict) -> str:

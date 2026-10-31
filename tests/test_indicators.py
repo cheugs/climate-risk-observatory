@@ -16,7 +16,7 @@ import pandas as pd
 import pytest
 
 from cro.features.build import build_exposure, build_hazard, build_vulnerability
-from cro.utils import minmax, percentile_rank, weighted_mean
+from cro.utils import percentile_rank, weighted_mean
 
 
 # ---------------------------------------------------------------------------
@@ -39,11 +39,6 @@ def test_percentile_rank_keeps_missing_values():
     ranks = percentile_rank(pd.Series([1.0, np.nan, 3.0]))
     assert ranks.isna().sum() == 1
     assert ranks.notna().sum() == 2
-
-
-def test_minmax_maps_to_zero_and_one():
-    scaled = minmax(pd.Series([10, 20, 30]))
-    assert scaled.tolist() == [0.0, 0.5, 1.0]
 
 
 def test_weighted_mean_ignores_missing_and_zero_weights():

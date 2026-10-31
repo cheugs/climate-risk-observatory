@@ -148,7 +148,6 @@ COOL_COLORS = list(reversed(WARM_COLORS))
 
 INK = "#6a0c06"
 DARK = "#1a1512"
-PAPER = "#b2c7ab"
 
 FONT = {"family": "Space Grotesk, Segoe UI, Arial, sans-serif", "color": INK, "size": 11}
 HOVER = {
@@ -218,7 +217,6 @@ COUNTRY_CHOICES = [
 TOTAL_POPULATION = DATA["population"].sum() / 1e9
 N_REGIONS = len(DATA)
 N_COUNTRIES = DATA["iso3"].nunique()
-N_WITH_SHDI = int(DATA["shdi"].notna().sum())
 N_RANKED = int(DATA["risk_equal"].notna().sum())
 MEDIAN_RISK = float(DATA["risk_equal"].median())
 RHO = float(
@@ -313,14 +311,6 @@ def fmt_value(indicator: str, value, lang: str | None = None) -> str:
         text = text.replace(",", "\u202f").replace(".", ",")
     return text
 
-
-
-def plot_values(indicator: str, values: pd.Series) -> pd.Series:
-    """Values as plotted. Exposure spans many orders of magnitude."""
-    values = values.astype(float)
-    if INDICATORS[indicator].get("log"):
-        return np.log10(values.clip(lower=1))
-    return values
 
 
 def visible_rows(view: str) -> pd.DataFrame:
@@ -978,6 +968,7 @@ def language_switch(lang: str, page: str = "/") -> html.Div:
 
 
 def layout(lang: str | None = None) -> html.Div:
+    """Build the whole dashboard page in the chosen language."""
     lang = _lang(lang)
     report_href = "/report/fr" if lang == "fr" else "/report"
     pdf_href = "/report/fr.pdf" if lang == "fr" else "/report.pdf"
@@ -1304,6 +1295,7 @@ def _validation_layout():
 
 
 def create_app() -> dash.Dash:
+    """Create the Dash app, register its callbacks and the extra Flask pages."""
     assets_folder = str(__import__("pathlib").Path(__file__).with_name("assets"))
     application = dash.Dash(
         __name__,

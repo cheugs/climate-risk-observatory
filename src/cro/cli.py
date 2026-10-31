@@ -22,6 +22,7 @@ import argparse
 
 
 def main(argv: list[str] | None = None) -> None:
+    """Read the command name and run the matching pipeline step."""
     parser = argparse.ArgumentParser(prog="cro", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("command", choices=[

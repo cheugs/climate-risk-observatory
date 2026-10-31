@@ -224,15 +224,6 @@ def _read_table(name: str) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
-def _read_processed(name: str) -> pd.DataFrame:
-    cfg = load_config()
-    path = Path(cfg["paths"]["processed"]) / name
-    return pd.read_parquet(path) if path.exists() else pd.DataFrame()
-
-
-# ---------------------------------------------------------------------------
-# 1. Build the snippets
-# ---------------------------------------------------------------------------
 
 def write_summary_snippet(lang: str = "en") -> None:
     """The key-numbers block that appears in the executive summary.
@@ -658,6 +649,7 @@ def render_fallback() -> bool:
 # ---------------------------------------------------------------------------
 
 def run() -> None:
+    """Write the report snippets, then render the English and French reports."""
     cfg = load_config()
     outputs = Path(cfg["paths"]["outputs"])
 

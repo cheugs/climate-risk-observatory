@@ -1,4 +1,4 @@
-"""Climate Risk & Human Development Observatory (DS01).
+"""Climate Risk & Human Development Observatory.
 
 A small, reproducible research pipeline that:
 1. downloads climate, population and development data,

@@ -4,8 +4,9 @@ GHS-POP gives the number of people in every 30 arc-second cell (about
 1 km at the equator) for the year 2020. We use it for two things:
 
 1. the total population of each region, and
-2. the population of each 1 degree climate grid cell, which lets us build
-   exposure measures such as "person-days above 35 C".
+2. the number of people around each climate sample point (each person is
+   given to the nearest point). This is used to check the totals and to
+   compute the descriptive measure "person-days above 35 C".
 """
 
 from __future__ import annotations

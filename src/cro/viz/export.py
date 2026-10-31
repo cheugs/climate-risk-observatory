@@ -6,7 +6,6 @@ without running Python, which is useful for a portfolio.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import geopandas as gpd
@@ -54,6 +53,7 @@ def interactive_map(gdf: gpd.GeoDataFrame, column: str, path: Path, title: str,
 
 
 def run() -> list[Path]:
+    """Create every static map, chart and interactive map in outputs/."""
     cfg = load_config()
     processed = Path(cfg["paths"]["processed"])
     outputs = Path(cfg["paths"]["outputs"])
@@ -93,13 +93,6 @@ def run() -> list[Path]:
         interactive_map(gdf, column, path, title, label, colorscale=scale)
         web.append(path)
 
-    manifest = {
-        "maps": [str(p.relative_to(outputs)) for p in map_files],
-        "figures": [str(p.relative_to(outputs)) for p in figure_files],
-        "interactive": [str(p.relative_to(outputs)) for p in web],
-    }
-    with open(outputs / "manifest.json", "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
 
     log(f"export: {len(map_files)} maps, {len(figure_files)} figures, {len(web)} web maps")
     return map_files + figure_files + web

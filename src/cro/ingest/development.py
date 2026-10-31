@@ -265,11 +265,6 @@ def build_crosswalk(regions: pd.DataFrame, gdl: pd.DataFrame, iso3: str) -> pd.D
     return pd.DataFrame(rows)
 
 
-def aggregate_france(gdl: pd.DataFrame) -> pd.DataFrame:
-    """Rebuild SHDI for the 13 new French regions from the old regions."""
-    return aggregate_units(gdl, FRANCE_AGGREGATION, "FRA")
-
-
 def aggregate_units(gdl: pd.DataFrame, mapping: dict, iso3: str) -> pd.DataFrame:
     """Combine several GDL units into one region using their mean value."""
     # Match names without accents so "Rhone-Alpes" and "Rhône-Alpes" agree.
@@ -308,6 +303,7 @@ def replace_old_units(gdl: pd.DataFrame, mapping: dict, iso3: str) -> pd.DataFra
 # ---------------------------------------------------------------------------
 
 def run() -> pd.DataFrame:
+    """Download SHDI and WDI data, match them to our regions and save the result."""
     cfg = load_config()
     processed = Path(cfg["paths"]["processed"])
 

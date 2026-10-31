@@ -101,17 +101,3 @@ def load_data() -> gpd.GeoDataFrame:
     log(f"dashboard: cached simplified geometry -> {cache.name}")
     return gdf
 
-
-def region_profile(gdf: gpd.GeoDataFrame, region_id: str) -> dict:
-    """The numbers shown in the region detail card."""
-    row = gdf[gdf["region_id"] == region_id]
-    if row.empty:
-        return {}
-    row = row.iloc[0]
-
-    country = gdf[gdf["iso3"] == row["iso3"]]
-    return {
-        "region": row,
-        "country_median": country[["hd35_area", "shdi", "vulnerability", "risk_equal"]].median(),
-        "world_median": gdf[["hd35_area", "shdi", "vulnerability", "risk_equal"]].median(),
-    }

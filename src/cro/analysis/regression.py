@@ -84,6 +84,7 @@ def country_slopes(data: pd.DataFrame, min_regions: int = 5) -> pd.DataFrame:
 
 
 def run() -> pd.DataFrame:
+    """Fit the H2 models and the per-country slopes, and save tables t07 and t08."""
     cfg = load_config()
     processed = Path(cfg["paths"]["processed"])
     tables = Path(cfg["paths"]["outputs"]) / "tables"

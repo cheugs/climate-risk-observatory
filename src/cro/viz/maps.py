@@ -94,6 +94,7 @@ def double_exposure_map(master: gpd.GeoDataFrame, path: Path) -> None:
     vuln_cut = data["vulnerability"].median()
 
     def group(row):
+        """Return the map group of one region (hazard and vulnerability vs medians)."""
         high_hazard = row["hazard_equal"] > hazard_cut
         high_vuln = row["vulnerability"] > vuln_cut
         if high_hazard and high_vuln:

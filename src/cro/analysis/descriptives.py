@@ -61,6 +61,7 @@ def top_regions(master: pd.DataFrame, n: int = 20) -> pd.DataFrame:
 
 
 def run() -> dict:
+    """Write the three descriptive tables (t01-t03) and return them."""
     cfg = load_config()
     processed = Path(cfg["paths"]["processed"])
     tables = Path(cfg["paths"]["outputs"]) / "tables"

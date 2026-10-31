@@ -6,7 +6,6 @@ normalisation functions used to build indices.
 
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 from typing import Any
@@ -43,11 +42,6 @@ def save_table(df: pd.DataFrame, path: Path, index: bool = False) -> None:
     log(f"saved {len(df):,} rows -> {path}")
 
 
-def load_table(path: Path) -> pd.DataFrame:
-    """Read a Parquet table."""
-    return pd.read_parquet(path)
-
-
 def load_geo_table(path: Path, geometry: str = "geometry",
                    crs: str = "EPSG:4326"):
     """Read a Parquet table that contains a geometry column.
@@ -78,13 +72,6 @@ def load_geo_table(path: Path, geometry: str = "geometry",
     elif frame.crs is None:
         frame = frame.set_crs(crs)
     return frame
-
-
-def save_json(data: Any, path: Path) -> None:
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
 
 
 # ---------------------------------------------------------------------------
@@ -130,19 +117,6 @@ def percentile_rank(series: pd.Series) -> pd.Series:
     Missing values stay missing.
     """
     return series.rank(pct=True, na_option="keep")
-
-
-def minmax(series: pd.Series) -> pd.Series:
-    """Scale a series to 0-1 using its minimum and maximum."""
-    low, high = series.min(), series.max()
-    if high == low:
-        return series * 0.0
-    return (series - low) / (high - low)
-
-
-def zscore(series: pd.Series) -> pd.Series:
-    """Standardise a series to mean 0 and standard deviation 1."""
-    return (series - series.mean()) / series.std(ddof=0)
 
 
 def weighted_mean(values: pd.Series, weights: pd.Series) -> float:

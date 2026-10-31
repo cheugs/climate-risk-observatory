@@ -106,10 +106,6 @@ def compact(value, lang: str = DEFAULT_LANG) -> str:
     return f"{number} {unit}".strip()
 
 
-def plural(count: float, singular: str, plural_form: str, lang: str) -> str:
-    return singular if abs(float(count) - 1) < 1e-9 else plural_form
-
-
 # ---------------------------------------------------------------------------
 # The text itself: key -> (English, French)
 # ---------------------------------------------------------------------------

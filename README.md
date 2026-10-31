@@ -143,7 +143,6 @@ app needs. See **[docs/deploy.md](docs/deploy.md)** for the steps.
 
 ```
 config/config.yaml              all settings (countries, thresholds, years)
-config/indicators.yaml          name, unit and direction of each indicator
 src/cro/ingest/                 download boundaries, climate, population, development
 src/cro/features/build.py       hazard, exposure, vulnerability, risk versions
 src/cro/analysis/               descriptive tables, H1/H3 tests, H2 regression

@@ -93,6 +93,7 @@ def test_rank_stability(versions: pd.DataFrame, top_n: int = 10) -> pd.DataFrame
 
 
 def run() -> dict:
+    """Run the H1 and H3 tests and save tables t05 and t06."""
     cfg = load_config()
     processed = Path(cfg["paths"]["processed"])
     tables = Path(cfg["paths"]["outputs"]) / "tables"

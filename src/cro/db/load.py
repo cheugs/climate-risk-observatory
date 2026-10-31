@@ -120,6 +120,7 @@ def build_facts(master: pd.DataFrame, climate: pd.DataFrame,
 
 
 def run() -> bool:
+    """Create the PostGIS tables and load the processed data into them."""
     cfg = load_config()
     processed = Path(cfg["paths"]["processed"])
 

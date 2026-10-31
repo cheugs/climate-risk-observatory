@@ -34,6 +34,7 @@ VERSIONS = ["equal", "additive", "per_person"]
 # ---------------------------------------------------------------------------
 
 def load_inputs() -> dict:
+    """Read every table produced by the ingest step."""
     cfg = load_config()
     processed = Path(cfg["paths"]["processed"])
 
@@ -159,6 +160,7 @@ def build_vulnerability(development: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def combine(inputs: dict, cfg: dict) -> pd.DataFrame:
+    """Join all inputs into one row per region and compute the risk scores."""
     regions = inputs["regions"][[
         "region_id", "iso3", "country", "region_name", "region_type",
         "area_km2", "centroid_lon", "centroid_lat", "is_remote",
@@ -218,6 +220,7 @@ def combine(inputs: dict, cfg: dict) -> pd.DataFrame:
 
 
 def run() -> pd.DataFrame:
+    """Build the master table and the long table of index versions, then save them."""
     cfg = load_config()
     inputs = load_inputs()
 
@@ -239,7 +242,7 @@ def run() -> pd.DataFrame:
 
     log(f"build: {len(master)} regions, "
         f"{master['has_development'].sum()} with development data")
-    log(f"build: top 5 by risk_equal")
+    log("build: top 5 by risk_equal")
     top = master.nlargest(5, "risk_equal")[["region_name", "iso3", "risk_equal"]]
     print(top.to_string(index=False))
 

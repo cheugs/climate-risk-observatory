@@ -17,6 +17,7 @@ from cro.analysis import descriptives, regression, tests
 
 
 def run() -> dict:
+    """Run every analysis step, then save key_numbers.json and key_results.md."""
     cfg = load_config()
     processed = Path(cfg["paths"]["processed"])
     outputs = Path(cfg["paths"]["outputs"])
