@@ -19,12 +19,14 @@ What actually has to be uploaded:
 | `src/` + `config/` | < 1 MB | the application |
 | `data/processed/dashboard_regions.parquet` | 0.6 MB | the dashboard data |
 | `outputs/tables/*.csv` | < 1 MB | summary page numbers |
+| `outputs/maps/map_web_*.html` | 6.3 MB | the interactive maps linked from the report |
 | `outputs/report/report(.fr).html` + `.pdf` | 19 MB | the written report, both languages |
 | `requirements-deploy.txt` | < 1 KB | runtime packages only |
 
 Everything else (`data/raw`, `data/cache`, most of `data/processed`,
-`outputs/figures`, `.venv`) is excluded by `.gitignore` and `.dockerignore`.
-A full checkout is about 21 MB, not the 1 GB of working data.
+`outputs/figures`, the static map PNGs, `.venv`) is excluded by `.gitignore`
+and `.dockerignore`. A full checkout is about 27 MB, not the 1 GB of working
+data.
 
 The app reads `PORT` from the environment and binds to `0.0.0.0`, so the same
 code works locally, on Render, and in a container.
@@ -103,6 +105,7 @@ name depends on your service name):
 - `/report` - the full HTML report
 - `/report.pdf` - the PDF
 - `/summary?lang=fr`, `/report/fr`, `/report/fr.pdf` - the French versions
+- `/maps/map_web_risk.html` - the interactive maps (also `hazard`, `exposure`, `shdi`)
 
 Every page has an EN / FR switch in the header; the choice is kept in a
 `cro_lang` cookie.

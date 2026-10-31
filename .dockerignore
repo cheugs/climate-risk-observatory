@@ -15,7 +15,8 @@ data/processed/*
 !data/processed/dashboard_regions.parquet
 
 outputs/figures/
-outputs/maps/
+outputs/maps/*
+!outputs/maps/map_web_*.html
 notebooks/
 docs/
 tests/

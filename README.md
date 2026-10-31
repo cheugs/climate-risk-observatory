@@ -98,6 +98,9 @@ in the top bar and in the band at the bottom of the page:
 - **full report** at <http://127.0.0.1:8050/report> - the self-contained Quarto HTML report.
 - **report.pdf** at <http://127.0.0.1:8050/report.pdf> - the print version.
 - **French versions** at `/summary?lang=fr`, `/report/fr` and `/report/fr.pdf`.
+- **interactive maps** at `/maps/map_web_risk.html`, plus `map_web_hazard.html`,
+  `map_web_exposure.html` and `map_web_shdi.html`. The report links to the full URLs, so a
+  reader of the HTML or the PDF can open a map without cloning anything.
 
 Every page carries an **EN / FR** switch in the top bar. It is a plain link rather than a
 JavaScript toggle: clicking it reloads the page in the other language, so no server-rendered

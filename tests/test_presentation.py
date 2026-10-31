@@ -199,6 +199,24 @@ def test_summary_and_report_routes_respond():
     assert pdf.headers["Content-Type"] == "application/pdf"
 
 
+def test_interactive_maps_are_served_by_the_app():
+    """The report links to /maps/..., so the app must serve those files."""
+    from cro.app.app import create_app
+
+    client = create_app().server.test_client()
+
+    for name in ("map_web_risk.html", "map_web_hazard.html",
+                 "map_web_exposure.html", "map_web_shdi.html"):
+        page = client.get(f"/maps/{name}")
+        assert page.status_code == 200
+        assert "text/html" in page.headers["Content-Type"]
+        assert b"plotly" in page.data.lower()
+
+    # Anything outside the four published maps must not be readable.
+    assert client.get("/maps/config.yaml").status_code == 404
+    assert client.get("/maps/report.html").status_code == 404
+
+
 def test_french_summary_and_report_routes_respond():
     """The French summary and both French report files must be reachable."""
     from cro.app.app import create_app

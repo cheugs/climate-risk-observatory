@@ -413,10 +413,10 @@ En plus des contrôles automatiques, trois vérifications manuelles de cohérenc
 
 À ouvrir dans n'importe quel navigateur, sans Python :
 
-- `outputs/maps/map_web_risk.html` : risque composite
-- `outputs/maps/map_web_hazard.html` : aléa climatique
-- `outputs/maps/map_web_exposure.html` : jours-personnes de chaleur
-- `outputs/maps/map_web_shdi.html` : IDH infranational
+- **Risque composite** : <https://climate-risk-observatory.onrender.com/maps/map_web_risk.html>
+- **Aléa climatique** : <https://climate-risk-observatory.onrender.com/maps/map_web_hazard.html>
+- **Jours-personnes de chaleur** : <https://climate-risk-observatory.onrender.com/maps/map_web_exposure.html>
+- **IDH infranational** : <https://climate-risk-observatory.onrender.com/maps/map_web_shdi.html>
 
 ## Annexe : étendre au monde
 

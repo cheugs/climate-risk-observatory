@@ -20,6 +20,7 @@ COPY config ./config
 COPY src ./src
 COPY data/processed/dashboard_regions.parquet ./data/processed/dashboard_regions.parquet
 COPY outputs/tables ./outputs/tables
+COPY outputs/maps ./outputs/maps
 COPY outputs/report ./outputs/report
 
 EXPOSE 7860

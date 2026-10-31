@@ -27,7 +27,7 @@ import html
 from pathlib import Path
 
 import pandas as pd
-from flask import make_response, send_from_directory
+from flask import abort, make_response, send_from_directory
 
 from cro.app.i18n import current_lang, num, t
 from cro.config import PROJECT_ROOT
@@ -46,6 +46,16 @@ COUNTRIES_FR = {
 
 TABLES_DIR = PROJECT_ROOT / "outputs" / "tables"
 REPORT_DIR = PROJECT_ROOT / "outputs" / "report"
+MAPS_DIR = PROJECT_ROOT / "outputs" / "maps"
+
+# The four interactive maps the report links to. Listed explicitly so the
+# route cannot be used to read anything else in outputs/maps.
+INTERACTIVE_MAPS = {
+    "map_web_risk.html",
+    "map_web_hazard.html",
+    "map_web_exposure.html",
+    "map_web_shdi.html",
+}
 
 REPORT_FILES = {
     "en": ("report.html", "report.pdf"),
@@ -888,3 +898,10 @@ def register_report_routes(server, tables_dir: Path = TABLES_DIR) -> None:
     @server.route("/report/fr.pdf")
     def report_pdf_fr():
         return send_from_directory(report_dir, "report.fr.pdf")
+
+    @server.route("/maps/<name>")
+    def interactive_map(name: str):
+        """The standalone maps, so the report can link to a real URL."""
+        if name not in INTERACTIVE_MAPS:
+            abort(404)
+        return send_from_directory(MAPS_DIR, name)

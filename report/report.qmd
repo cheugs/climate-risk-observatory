@@ -413,10 +413,10 @@ Beyond the automated contract checks, three manual sanity checks were made at ea
 
 Open these in any browser, no Python needed:
 
-- `outputs/maps/map_web_risk.html` - composite risk
-- `outputs/maps/map_web_hazard.html` - climate hazard
-- `outputs/maps/map_web_exposure.html` - person-days of heat
-- `outputs/maps/map_web_shdi.html` - subnational HDI
+- **Composite risk**: <https://climate-risk-observatory.onrender.com/maps/map_web_risk.html>
+- **Climate hazard**: <https://climate-risk-observatory.onrender.com/maps/map_web_hazard.html>
+- **Person-days of heat**: <https://climate-risk-observatory.onrender.com/maps/map_web_exposure.html>
+- **Subnational HDI**: <https://climate-risk-observatory.onrender.com/maps/map_web_shdi.html>
 
 ## Appendix: extending to the world
 
