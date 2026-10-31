@@ -64,6 +64,16 @@ Risk          = Hazard x Exposure x Vulnerability
 
 ---
 
+## Walkthrough notebook
+
+`notebooks/exploration.ipynb` tells the story of the project step by step: the data, how the
+index is built, the maps and the three hypotheses. It imports the same functions as the
+pipeline (`src/cro/`) and only needs `data/processed/dashboard_regions.parquet`, which is in
+the repository, so it runs right after `git clone`. GitHub shows it with all its tables and
+charts.
+
+---
+
 ## Quick start
 
 ```bash
@@ -152,6 +162,7 @@ src/cro/app/i18n.py             all English/French texts of the dashboard
 src/cro/db/                     PostGIS schema and loader
 src/cro/report/                 report tables + Quarto rendering
 report/                         report.qmd / report.fr.qmd
+notebooks/exploration.ipynb     step-by-step walkthrough of the results (uses src/cro)
 tests/                          unit tests, data checks, dashboard tests
 data/processed/                 intermediate tables (Parquet)
 outputs/maps|figures|tables/    results
