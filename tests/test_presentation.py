@@ -255,3 +255,21 @@ def test_dashboard_layout_switches_language():
     assert "lang-globe" in french.data.decode("utf-8")
     assert "Cache-Control" in french.headers
     assert french.headers["Cache-Control"] == "no-store"
+
+
+def test_the_page_does_not_embed_the_whole_layout():
+    """The first HTML response must stay small.
+
+    Dash copies the layout into ``_dash-config`` when the layout is a
+    function. With the map figures in it that block weighed 7.9 MB, sent on
+    top of the 7.9 MB that ``/_dash-layout`` already sends.
+    """
+    from cro.app.app import create_app
+
+    client = create_app().server.test_client()
+
+    page = client.get("/")
+    assert page.status_code == 200
+    assert len(page.data) < 200_000
+    assert b"validation_layout" in page.data  # ids are still checked
+    assert b'"figure":{}' in page.data  # but the geometry is not shipped

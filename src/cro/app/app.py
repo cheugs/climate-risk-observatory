@@ -1217,6 +1217,23 @@ def layout(lang: str | None = None) -> html.Div:
 # App and callbacks
 # ---------------------------------------------------------------------------
 
+def _validation_layout():
+    """A copy of the layout used only to check that callback ids exist.
+
+    When the layout is a function, Dash evaluates it once at start-up and
+    embeds the result in the ``_dash-config`` block of every page. The real
+    layout weighs several megabytes because the map figures carry their
+    geometry, so every visit would download it twice: once in the page and
+    once from ``/_dash-layout``. The figures are useless for id checking, so
+    they are emptied here and the page stays a few kilobytes.
+    """
+    tree = layout("en")
+    for part in tree._traverse():
+        if isinstance(part, dcc.Graph):
+            part.figure = {}
+    return tree
+
+
 def create_app() -> dash.Dash:
     assets_folder = str(__import__("pathlib").Path(__file__).with_name("assets"))
     application = dash.Dash(
@@ -1225,6 +1242,9 @@ def create_app() -> dash.Dash:
         title="Climate Risk Observatory",
         update_title=None,
     )
+
+    # Set before the layout: Dash then skips building its own copy.
+    application.validation_layout = _validation_layout()
 
     # A function, not a fixed tree: Dash calls it on every /_dash-layout
     # request, so the page is rebuilt in the language of the reader.
