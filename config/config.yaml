@@ -7,9 +7,10 @@ project:
   name: "Climate Risk & Human Development Observatory"
   version: "0.1.0"
 
-  # Pilot countries. They are very different on purpose: a rich temperate
-  # country (FRA), a rich and very large country with many climates (USA),
-  # and a lower-middle-income hot country (IND).
+  # Pilot countries. They are very different on purpose: a high-income
+  # country with a temperate climate (FRA), a high-income and very large
+  # country with many climates (USA), and a lower-middle-income country
+  # with a hot climate (IND).
   # To run on more countries, list them here (["ALL"] means every country).
   pilot_iso3: ["FRA", "USA", "IND"]
 

@@ -232,5 +232,16 @@ This creates `dim_region`, `dim_country`, `fact_climate`, `fact_population`, `fa
 
 - Add more countries: set `project.pilot_iso3` in `config/config.yaml` (for example `["ALL"]`).
 - Use a spatial regression model.
-- Add a poverty indicator (for example World Bank subnational poverty data).
+- Add a household income indicator to see inequality inside regions.
 - Test other heat thresholds (30 C, 40 C).
+
+## Key references
+
+The full list is in the report. The main method choices follow:
+
+- **Risk = hazard x exposure x vulnerability:** Cardona et al. (2012), IPCC SREX chapter 2; IPCC (2014), AR5 WGII.
+- **Multiplicative risk index:** Marin-Ferrer, Vernaccini & Poljansek (2017), INFORM methodology (European Commission JRC).
+- **Rank normalisation and robustness checks:** Nardo et al. (2008), OECD/JRC *Handbook on Constructing Composite Indicators*; Saisana, Saltelli & Tarantola (2005), *JRSS A* 168(2).
+- **Climate extreme indicators:** Zhang et al. (2011), *WIREs Climate Change* 2(6).
+- **Climate and income inside countries:** Dell, Jones & Olken (2009), *American Economic Review* 99(2); Nordhaus (2006), *PNAS* 103(10).
+- **Subnational HDI:** Smits & Permanyer (2019), *Scientific Data* 6.

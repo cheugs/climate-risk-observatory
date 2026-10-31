@@ -298,7 +298,7 @@ def _copy(lang: str, values: dict) -> dict[str, str]:
             "p_num": "04", "p_title": "où se situe le risque",
             "p_text": (
                 "Les dix régions les plus à risque sont toutes en Inde, car l'Inde "
-                "est à la fois plus chaude et moins développée. Pour voir les "
+                "a un climat plus chaud et un IDH-S moyen plus faible. Pour voir les "
                 "différences en France ou aux États-Unis, choisissez un pays dans le "
                 "tableau de bord. Le classement indique où regarder en premier ; ce "
                 "n'est pas un verdict."
@@ -456,9 +456,10 @@ def _copy(lang: str, values: dict) -> dict[str, str]:
             ),
             "p_num": "04", "p_title": "where the risk is",
             "p_text": (
-                "All ten highest-risk regions are in India, because India is both "
-                "hotter and less developed. To see the differences inside France or "
-                "the United States, choose a country in the dashboard. The ranking "
+                "All ten highest-risk regions are in India, because India has both a "
+                "hotter climate and a lower average SHDI. To see the differences "
+                "inside France or the United States, choose a country in the "
+                "dashboard. The ranking "
                 "shows where to look first; it is not a verdict."
             ),
             "l_num": "05", "l_title": "the limits",

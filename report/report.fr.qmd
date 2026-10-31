@@ -1,6 +1,6 @@
 ---
 title: "Risque climatique et développement humain"
-subtitle: "Les régions au climat le plus extrême sont-elles aussi les moins développées ? Un pilote sur la France, l’Inde et les États-Unis"
+subtitle: "Les régions au climat le plus extrême ont-elles aussi le développement humain le plus faible ? Un pilote sur la France, l’Inde et les États-Unis"
 author: "DS01 - Observatoire du risque climatique & du développement humain"
 date: today
 date-format: "D MMMM YYYY"
@@ -54,11 +54,46 @@ Ces résultats sont des **associations, pas des causes**.
 
 {{< include generated_fr/summary.md >}}
 
+## Abréviations {.unnumbered}
+
+| Abréviation | Signification |
+|---|---|
+| admin-1 | premier niveau de régions dans un pays (États, provinces, régions) |
+| CC-BY | licence Creative Commons Attribution (usage libre si on cite la source) |
+| CDD | *Consecutive Dry Days* : plus longue suite de jours avec moins de 1 mm de pluie |
+| CRS / EPSG:4326 | système de coordonnées ; EPSG:4326 = latitude/longitude (WGS 84) |
+| CSV | fichier de tableau simple (valeurs séparées par des virgules) |
+| ETCCDI | équipe d'experts sur la détection du changement climatique et les indices (indices standards d'extrêmes climatiques) |
+| FRA, IND, USA | codes ISO à 3 lettres de la France, de l'Inde et des États-Unis |
+| GHS-POP | *Global Human Settlement Layer* - grille de population (Commission européenne) |
+| GIEC | Groupe d'experts intergouvernemental sur l'évolution du climat (IPCC en anglais) |
+| H1, H2, H3 | les trois hypothèses testées dans ce rapport |
+| HC3 | type d'erreur-type robuste pour les régressions |
+| HD35 | *Heat Days* : jours avec une température maximale de 35 °C ou plus |
+| IC | intervalle de confiance (ici à 95 %) |
+| IDH-S | indice de développement humain infranational (SHDI en anglais, Global Data Lab) |
+| INFORM | *Index for Risk Management* : indice de gestion des risques (Commission européenne) |
+| JRC | Centre commun de recherche de la Commission européenne |
+| M1, M2 | les deux modèles de régression (sans et avec effets pays) |
+| MCO | moindres carrés ordinaires (régression linéaire, OLS en anglais) |
+| MERRA-2 | réanalyse climatique de la NASA, version 2 |
+| N | nombre d'observations (régions) |
+| NASA POWER | *Prediction Of Worldwide Energy Resources* : données climatiques quotidiennes de la NASA |
+| OCDE | Organisation de coopération et de développement économiques |
+| p | p-valeur : probabilité d'obtenir un résultat au moins aussi fort s'il n'y avait aucun lien réel |
+| R² | part de la variation de l'IDH-S expliquée par le modèle |
+| R50 | jours avec plus de 50 mm de pluie |
+| Rx1day | plus forte pluie en un jour dans l'année |
+| rho | corrélation de rang de Spearman, de −1 à +1 |
+| TR25 | nuits tropicales : nuits avec une température minimale de 25 °C ou plus |
+| WBAL | bilan hydrique : pluie moins évapotranspiration |
+| WDI | *World Development Indicators* (Banque mondiale) |
+
 ## Introduction
 
 ### Contexte
 
-On parle souvent du risque climatique pays par pays. Mais un pays n'est pas homogène : en Inde, le Rajasthan compte environ 170 jours au-dessus de 35 °C par an, alors que le Kerala n'en a presque aucun. Le développement humain change aussi beaucoup à l'intérieur d'un pays. Pour savoir où l'aide est la plus utile, il faut travailler à une échelle plus fine.
+On parle souvent du risque climatique pays par pays. Mais un pays n'est pas homogène : en Inde, le Rajasthan compte environ 170 jours au-dessus de 35 °C par an, alors que le Kerala n'en a presque aucun. Le développement humain change aussi beaucoup à l'intérieur d'un pays. Pour savoir où l'aide est la plus utile, il faut travailler à une échelle plus fine. Des études montrent pourquoi : Nordhaus (2006) a trouvé que le climat et la géographie expliquent une grande partie de la production économique quand on la mesure sur une grille fine plutôt que par pays, et Dell, Jones et Olken (2009) ont montré que le lien négatif entre température et revenu existe aussi *à l'intérieur* des pays. Les chocs climatiques touchent aussi plus fortement les personnes qui ont moins de ressources (Hallegatte et al., 2016), et les fortes chaleurs réduisent la production économique (Burke, Hsiang et Miguel, 2015).
 
 Nous travaillons au **niveau admin-1** (États, provinces, régions). C'est le plus petit niveau où les données de climat, de population et de développement sont toutes disponibles gratuitement.
 
@@ -72,11 +107,11 @@ Nous testons trois hypothèses :
 - **H2.** C'est encore vrai quand on compare les régions d'un même pays.
 - **H3.** Le classement du risque change peu quand on change la façon de construire l'indice.
 
-H2 est importante. L'Inde est à la fois plus chaude et plus pauvre que la France et les États-Unis : une corrélation sur toutes les régions pourrait seulement dire « l'Inde est différente ». Comparer les régions d'un même pays est un test plus juste.
+H2 est importante. L'Inde a un climat plus chaud et un IDH-S moyen plus faible que la France et les États-Unis : une corrélation sur toutes les régions pourrait seulement dire « l'Inde est différente ». Comparer les régions d'un même pays est un test plus juste. Les économistes débattent depuis longtemps pour savoir si le lien entre géographie et revenu vient du climat lui-même (Gallup, Sachs et Mellinger, 1999) ou de l'histoire et des institutions (Acemoglu, Johnson et Robinson, 2002). Comparer des régions d'un même pays garde les mêmes institutions nationales : c'est l'approche de Dell, Jones et Olken (2009).
 
 ### Périmètre
 
-Le pilote couvre trois pays, choisis parce qu'ils sont très différents : la France (riche, tempérée, petite), les États-Unis (riches, très grands, nombreux climats) et l'Inde (revenu intermédiaire, chaude, très peuplée). Le code peut tourner sur d'autres pays en changeant une ligne dans `config/config.yaml`.
+Le pilote couvre trois pays, choisis parce qu'ils sont très différents : la France (revenu élevé, climat tempéré, petite), les États-Unis (revenu élevé, très grands, nombreux climats) et l'Inde (revenu intermédiaire inférieur, climat chaud, très grande population). Le code peut tourner sur d'autres pays en changeant une ligne dans `config/config.yaml`.
 
 ::: {.callout-warn}
 **Ce que ce rapport n'affirme pas.** Tous les résultats sont des associations. Nous ne prouvons pas que le climat cause un faible développement. L'histoire, la géographie et les institutions peuvent expliquer les deux.
@@ -96,9 +131,9 @@ Le pilote couvre trois pays, choisis parce qu'ils sont très différents : la Fr
 
 ### Données climatiques
 
-NASA POWER fournit une série quotidienne par point. Dans chaque région, nous choisissons entre 1 et 8 points (un point pour 40 000 km²), répartis sur toute la région. Cela donne **308 points** au total. Pour chaque point, nous téléchargeons tous les jours de 1991 à 2023.
+NASA POWER fournit une série quotidienne par point. Ses données viennent de la réanalyse MERRA-2 de la NASA (Gelaro et al., 2017). Dans chaque région, nous choisissons entre 1 et 8 points (un point pour 40 000 km²), répartis sur toute la région. Cela donne **308 points** au total. Pour chaque point, nous téléchargeons tous les jours de 1991 à 2023.
 
-À partir des données quotidiennes, nous calculons six indicateurs par an, puis la moyenne sur 2004-2023 :
+À partir des données quotidiennes, nous calculons six indicateurs par an, puis la moyenne sur 2004-2023. Ils suivent la logique des indices standards d'extrêmes climatiques de l'équipe d'experts ETCCDI (Zhang et al., 2011), avec des seuils choisis pour le stress thermique et les fortes pluies :
 
 | Code | Indicateur | Groupe |
 |---|---|---|
@@ -115,39 +150,39 @@ Une vérification rapide : le Rajasthan (désert) a 169 jours de chaleur par an 
 
 ### Population
 
-GHS-POP donne le nombre d'habitants de chaque case de 1 km. Nous additionnons les cases de chaque région. Nous rattachons aussi chaque personne au point climatique le plus proche. Les deux totaux sont presque égaux (1 803,1 millions contre 1 805,5 millions, soit 0,1 % d'écart).
+GHS-POP donne le nombre d'habitants de chaque case de 1 km. Nous additionnons les cases de chaque région. Nous rattachons aussi chaque personne au point climatique le plus proche. Les deux totaux sont presque égaux (1 803,1 millions contre 1 805,5 millions, soit 0,1 % d'écart). Avec ces deux éléments, nous calculons aussi les *jours-personnes de chaleur extrême* (habitants × jours chauds), une mesure utilisée dans les études sur l'exposition à la chaleur (Tuholske et al., 2021). Elle apparaît dans le tableau 1 comme information en plus, mais elle n'est pas utilisée dans l'indice de risque.
 
 ### Développement
 
-L'IDH-S vient du Global Data Lab. Ses noms de régions ne sont pas toujours les mêmes que dans geoBoundaries (par exemple *Odisha* / *Orissa*). Nous avons associé les noms en trois étapes : correspondance exacte, une courte liste manuelle, puis correspondance approximative. **99 des 105 régions** ont un IDH-S. Les 6 autres (le Ladakh et cinq petits territoires américains) restent sur les cartes climatiques mais ne sont pas utilisées dans les tests. Nous ne les remplaçons pas par la moyenne du pays, car cela créerait de fausses données.
+L'IDH-S vient du Global Data Lab (Smits et Permanyer, 2019). Il est calculé comme l'indice de développement humain national (santé, éducation et revenu), mais pour les régions. Ses noms de régions ne sont pas toujours les mêmes que dans geoBoundaries (par exemple *Odisha* / *Orissa*). Nous avons associé les noms en trois étapes : correspondance exacte, une courte liste manuelle, puis correspondance approximative. **99 des 105 régions** ont un IDH-S. Les 6 autres (le Ladakh et cinq petits territoires américains) restent sur les cartes climatiques mais ne sont pas utilisées dans les tests. Nous ne les remplaçons pas par la moyenne du pays, car cela créerait de fausses données.
 
 ## Méthode
 
 ### L'indice de risque
 
-Nous suivons l'idée du GIEC : le risque a besoin d'un **aléa**, de personnes **exposées** et d'une **vulnérabilité**. Chaque partie est un score entre 0 et 1.
+Nous suivons l'idée du GIEC : le risque vient de la rencontre entre un **aléa**, des personnes **exposées** et leur **vulnérabilité** (Cardona et al., 2012 ; IPCC, 2014). Chaque partie est un score entre 0 et 1.
 
-Pour construire chaque score, nous utilisons des **rangs centiles** : la région avec la valeur la plus basse a un score proche de 0, et celle avec la valeur la plus haute a 1. Les rangs permettent de mélanger des jours, des millimètres et des indices, et une région extrême n'écrase pas toutes les autres.
+Pour construire chaque score, nous utilisons des **rangs centiles** : la région avec la valeur la plus basse a un score proche de 0, et celle avec la valeur la plus haute a 1. Les rangs permettent de mélanger des jours, des millimètres et des indices, et une région extrême n'écrase pas toutes les autres. La normalisation par les rangs est une des méthodes standards décrites dans le manuel OCDE/JRC sur les indicateurs composites (Nardo et al., 2008).
 
 L'**aléa** est la moyenne de trois sous-scores :
 
-$$
-\text{Aléa} = \tfrac{1}{3}\left(H_{\text{chaleur}} + H_{\text{sec}} + H_{\text{humide}}\right)
-$$
+```
+Aléa = (H_chaleur + H_sec + H_humide) / 3
+```
 
-$H_{\text{chaleur}}$ est le rang moyen de HD35 et TR25, $H_{\text{sec}}$ celui de CDD et de WBAL (inversé), et $H_{\text{humide}}$ celui de Rx1day et R50.
+`H_chaleur` est le rang moyen de HD35 et TR25, `H_sec` celui de CDD et de WBAL (inversé), et `H_humide` celui de Rx1day et R50.
 
 L'**exposition** est le rang de la population de la région. Nous ne multiplions pas la population par les jours de chaleur, car la chaleur est déjà dans l'aléa : elle serait comptée deux fois.
 
-La **vulnérabilité** vaut $1 - \text{rang(IDH-S)}$. Un faible développement signifie moins d'argent, de santé et d'éducation pour faire face à un choc climatique.
+La **vulnérabilité** vaut `1 - rang(IDH-S)`. Un faible développement signifie moins d'argent, de santé et d'éducation pour faire face à un choc climatique.
 
 Le **risque** est le produit des trois :
 
-$$
-\text{Risque} = \text{Aléa} \times \text{Exposition} \times \text{Vulnérabilité}
-$$
+```
+Risque = Aléa x Exposition x Vulnérabilité
+```
 
-Nous utilisons un produit car une région a besoin des trois pour être à risque : un désert chaud sans habitants n'est pas une catastrophe.
+Nous utilisons un produit car une région a besoin des trois pour être à risque : un désert chaud sans habitants n'est pas une catastrophe. L'indice de risque INFORM de la Commission européenne combine aussi ses parties par multiplication, pour que le risque soit nul quand une partie est nulle (Marin-Ferrer, Vernaccini et Poljansek, 2017).
 
 ### Trois versions de l'indice
 
@@ -157,16 +192,16 @@ Nous utilisons un produit car une région a besoin des trois pour être à risqu
 | `additive` | moyenne des trois scores | le produit change-t-il quelque chose ? |
 | `per_person` | Aléa × Vulnérabilité | sans la population : le classement est-il seulement un effet de taille ? |
 
-La version `per_person` est utile car les grandes régions ont toujours un score d'exposition élevé. Si les premières régions restent les mêmes sans la population, le classement ne dépend pas seulement de la taille.
+Tester plusieurs versions d'un indice est une pratique recommandée, car les poids et la formule sont des choix (Saisana, Saltelli et Tarantola, 2005 ; Nardo et al., 2008). La version `per_person` est utile car les grandes régions ont toujours un score d'exposition élevé. Si les premières régions restent les mêmes sans la population, le classement ne dépend pas seulement de la taille.
 
 ### Tests statistiques
 
-- **H1 :** corrélation de rang de Spearman entre l'aléa et l'IDH-S, sur toutes les régions puis pays par pays. Nous utilisons Spearman car il travaille sur les rangs et n'a pas besoin d'une loi normale. Nous comparons aussi l'IDH-S médian de la moitié la plus exposée et de la moitié la moins exposée.
+- **H1 :** corrélation de rang de Spearman entre l'aléa et l'IDH-S, sur toutes les régions puis pays par pays. Nous utilisons Spearman (1904) car il travaille sur les rangs et n'a pas besoin d'une loi normale. Nous comparons aussi l'IDH-S médian de la moitié la plus exposée et de la moitié la moins exposée.
 - **H2 :** deux régressions linéaires (MCO) avec l'IDH-S comme variable expliquée :
-  - M1 : $\text{IDH-S} = a + b \cdot \text{Aléa}$
+  - M1 : `IDH-S = a + b x Aléa`
   - M2 : la même chose, plus une variable indicatrice par pays (« effet pays »).
 
-  Les indicatrices pays enlèvent la différence moyenne entre les pays : dans M2, $b$ utilise seulement les différences entre régions d'un même pays. Nous estimons aussi M1 dans chaque pays séparément. Nous utilisons des erreurs-types robustes (HC3).
+  Les indicatrices pays enlèvent la différence moyenne entre les pays : dans M2, `b` utilise seulement les différences entre régions d'un même pays. Nous estimons aussi M1 dans chaque pays séparément. Nous utilisons des erreurs-types robustes (HC3) : elles restent correctes quand la variance des erreurs n'est pas la même pour toutes les régions, et elles sont recommandées pour les petits échantillons (Long et Ervin, 2000).
 - **H3 :** corrélation de Spearman entre les classements des trois versions, et nombre de régions présentes dans le top 10 des deux versions.
 
 Nous utilisons un seuil de significativité de 5 %.
@@ -258,12 +293,12 @@ Les trois versions sont fortement corrélées (corrélation de Spearman d’au m
 
 ### Ce que signifient les résultats
 
-L'aléa climatique et le faible développement humain se superposent, surtout entre pays, mais aussi à l'intérieur de l'Inde et des États-Unis. L'effet à l'intérieur des pays est modéré : le climat est un facteur parmi d'autres. Pour les politiques publiques, cela veut dire que l'aide doit viser des **régions**, pas des pays entiers, et que les régions avec un aléa élevé et un faible développement (carte ci-dessus) doivent passer en premier.
+L'aléa climatique et le faible développement humain se superposent, surtout entre pays, mais aussi à l'intérieur de l'Inde et des États-Unis. L'effet à l'intérieur des pays est modéré : le climat est un facteur parmi d'autres. C'est le même schéma que chez Dell, Jones et Olken (2009) : le lien à l'intérieur des pays est réel, mais plus faible que le lien entre pays. Pour les politiques publiques, cela veut dire que l'aide doit viser des **régions**, pas des pays entiers, et que les régions avec un aléa élevé et un faible développement (carte ci-dessus) doivent passer en premier.
 
 ### Limites
 
-1. **Association, pas causalité.** L'histoire, la géographie et l'économie peuvent expliquer à la fois le climat et le développement.
-2. **Les régions voisines se ressemblent.** Les régressions traitent chaque région comme indépendante, mais des voisines partagent climat et économie. Les p-values sont donc sans doute trop petites. Un modèle de régression spatiale serait une bonne étape suivante.
+1. **Association, pas causalité.** L'histoire, la géographie et l'économie peuvent expliquer à la fois le climat et le développement (Gallup, Sachs et Mellinger, 1999 ; Acemoglu, Johnson et Robinson, 2002).
+2. **Les régions voisines se ressemblent.** Les régressions traitent chaque région comme indépendante, mais des voisines partagent climat et économie. Les p-values sont donc sans doute trop petites. Un modèle de régression spatiale (Anselin, 1988) serait une bonne étape suivante.
 3. **Seulement 3 pays et 99 régions.** La France n'a que 13 régions : ses résultats sont incertains.
 4. **Un seul indicateur de développement.** L'IDH-S ne montre pas les inégalités à l'intérieur d'une région.
 5. **Seuils fixes.** 35 °C et 50 mm sont des choix. La France n'a presque aucun jour au-dessus de 35 °C : un seuil plus bas changerait sa carte.
@@ -325,21 +360,57 @@ Suites possibles :
 
 - ajouter d'autres pays (le code est prêt, il suffit de changer le fichier de configuration) ;
 - utiliser un modèle de régression spatiale pour tenir compte des voisins ;
-- ajouter un indicateur de pauvreté pour voir les inégalités à l'intérieur des régions ;
+- ajouter un indicateur de revenu des ménages pour voir les inégalités à l'intérieur des régions ;
 - tester d'autres seuils de chaleur (par exemple 30 °C).
 
 ## Références
 
+Acemoglu, D., Johnson, S., & Robinson, J. A. (2002). Reversal of fortune: Geography and institutions in the making of the modern world income distribution. *The Quarterly Journal of Economics*, 117(4), 1231-1294.
+
+Anselin, L. (1988). *Spatial Econometrics: Methods and Models*. Dordrecht : Kluwer Academic Publishers.
+
+Burke, M., Hsiang, S. M., & Miguel, E. (2015). Global non-linear effect of temperature on economic production. *Nature*, 527, 235-239.
+
+Cardona, O. D., van Aalst, M. K., Birkmann, J., et al. (2012). Determinants of risk: exposure and vulnerability. In C. B. Field et al. (Eds.), *Managing the Risks of Extreme Events and Disasters to Advance Climate Change Adaptation* (IPCC Special Report, chapter 2, pp. 65-108). Cambridge University Press.
+
+Dell, M., Jones, B. F., & Olken, B. A. (2009). Temperature and income: Reconciling new cross-sectional and panel estimates. *American Economic Review*, 99(2), 198-204.
+
+Gallup, J. L., Sachs, J. D., & Mellinger, A. D. (1999). Geography and economic development. *International Regional Science Review*, 22(2), 179-232.
+
+Gelaro, R., McCarty, W., Suárez, M. J., et al. (2017). The Modern-Era Retrospective Analysis for Research and Applications, Version 2 (MERRA-2). *Journal of Climate*, 30(14), 5419-5454.
+
 Global Data Lab. *Subnational Human Development Index (SHDI)*. Radboud University. <https://globaldatalab.org/shdi/>
+
+Hallegatte, S., Bangalore, M., Bonzanigo, L., et al. (2016). *Shock Waves: Managing the Impacts of Climate Change on Poverty*. Climate Change and Development Series. Washington, DC: World Bank.
 
 Hargreaves, G. H., & Samani, Z. A. (1985). Reference crop evapotranspiration from temperature. *Applied Engineering in Agriculture*, 1(2), 96-99.
 
-GIEC / IPCC (2022). *Climate Change 2022: Impacts, Adaptation and Vulnerability*. Contribution du groupe de travail II au sixième rapport d'évaluation.
+IPCC (2014). Summary for policymakers. In *Climate Change 2014: Impacts, Adaptation, and Vulnerability. Part A* (Working Group II contribution to the Fifth Assessment Report). Cambridge University Press.
+
+IPCC (2022). *Climate Change 2022: Impacts, Adaptation and Vulnerability*. Working Group II contribution to the Sixth Assessment Report. Cambridge University Press.
+
+Long, J. S., & Ervin, L. H. (2000). Using heteroscedasticity consistent standard errors in the linear regression model. *The American Statistician*, 54(3), 217-224.
+
+Marin-Ferrer, M., Vernaccini, L., & Poljansek, K. (2017). *Index for Risk Management - INFORM: Concept and Methodology Report, Version 2017*. Luxembourg: Publications Office of the European Union (European Commission, Joint Research Centre).
 
 NASA Langley Research Center. *POWER Project Data Access Viewer*. <https://power.larc.nasa.gov/>
 
-Pesaresi, M., et al. (2023). *GHS-POP R2023A - GHS population grid multitemporal (1975-2030)*. Commission européenne, JRC.
+Nardo, M., Saisana, M., Saltelli, A., Tarantola, S., Hoffman, A., & Giovannini, E. (2008). *Handbook on Constructing Composite Indicators: Methodology and User Guide*. Paris: OECD Publishing (with the European Commission, Joint Research Centre).
+
+Nordhaus, W. D. (2006). Geography and macroeconomics: New data and new findings. *Proceedings of the National Academy of Sciences*, 103(10), 3510-3517.
+
+Pesaresi, M., et al. (2023). *GHS-POP R2023A - GHS population grid multitemporal (1975-2030)*. European Commission, JRC.
 
 Runfola, D., et al. (2020). geoBoundaries: A global database of political administrative boundaries. *PLOS ONE*, 15(4), e0231866.
 
-Banque mondiale. *World Development Indicators*. <https://databank.worldbank.org/source/world-development-indicators>
+Saisana, M., Saltelli, A., & Tarantola, S. (2005). Uncertainty and sensitivity analysis techniques as tools for the quality assessment of composite indicators. *Journal of the Royal Statistical Society: Series A*, 168(2), 307-323.
+
+Smits, J., & Permanyer, I. (2019). The Subnational Human Development Database. *Scientific Data*, 6, 190038.
+
+Spearman, C. (1904). The proof and measurement of association between two things. *The American Journal of Psychology*, 15(1), 72-101.
+
+Tuholske, C., Caylor, K., Funk, C., et al. (2021). Global urban population exposure to extreme heat. *Proceedings of the National Academy of Sciences*, 118(41), e2024792118.
+
+World Bank. *World Development Indicators*. <https://databank.worldbank.org/source/world-development-indicators>
+
+Zhang, X., Alexander, L., Hegerl, G. C., et al. (2011). Indices for monitoring changes in extremes based on daily temperature and precipitation data. *WIREs Climate Change*, 2(6), 851-870.

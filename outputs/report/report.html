@@ -3123,44 +3123,6 @@ body { padding-top: 44px; }
   <a href="/report/fr" title="Français">FR</a>
 </div>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  
-  <script>
-    (function () {
-      var script = document.createElement("script");
-      script.type = "text/javascript";
-      script.src  = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js";
-      document.getElementsByTagName("head")[0].appendChild(script);
-    })();
-  </script>
-
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 
 
@@ -3173,6 +3135,7 @@ window.Quarto = {
    
   <ul>
   <li><a href="#summary" id="toc-summary" class="nav-link active" data-scroll-target="#summary">Summary</a></li>
+  <li><a href="#abbreviations" id="toc-abbreviations" class="nav-link" data-scroll-target="#abbreviations">Abbreviations</a></li>
   <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a>
   <ul class="collapse">
   <li><a href="#context" id="toc-context" class="nav-link" data-scroll-target="#context"><span class="header-section-number">1.1</span> Context</a></li>
@@ -3227,7 +3190,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Climate Risk and Human Development</h1>
-<p class="subtitle lead">Are the regions with the most extreme climate also the least developed? A pilot on France, India and the United States</p>
+<p class="subtitle lead">Are the regions with the most extreme climate also the regions with the lowest human development? A pilot on France, India and the United States</p>
 </div>
 
 
@@ -3292,11 +3255,148 @@ Note
 </div>
 </div>
 </section>
+<section id="abbreviations" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="abbreviations">Abbreviations</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Abbreviation</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>admin-1</td>
+<td>first level of regions inside a country (states, provinces, regions)</td>
+</tr>
+<tr class="even">
+<td>CC-BY</td>
+<td>Creative Commons Attribution licence (free use if the source is cited)</td>
+</tr>
+<tr class="odd">
+<td>CDD</td>
+<td>Consecutive Dry Days: longest run of days with less than 1 mm of rain</td>
+</tr>
+<tr class="even">
+<td>CI</td>
+<td>Confidence Interval (here at 95%)</td>
+</tr>
+<tr class="odd">
+<td>CRS / EPSG:4326</td>
+<td>Coordinate Reference System; EPSG:4326 = latitude/longitude (WGS 84)</td>
+</tr>
+<tr class="even">
+<td>CSV</td>
+<td>Comma-Separated Values (simple table file)</td>
+</tr>
+<tr class="odd">
+<td>ETCCDI</td>
+<td>Expert Team on Climate Change Detection and Indices (standard climate extreme indices)</td>
+</tr>
+<tr class="even">
+<td>FRA, IND, USA</td>
+<td>ISO 3-letter codes for France, India and the United States</td>
+</tr>
+<tr class="odd">
+<td>GHS-POP</td>
+<td>Global Human Settlement Layer - Population grid (European Commission)</td>
+</tr>
+<tr class="even">
+<td>H1, H2, H3</td>
+<td>the three hypotheses tested in this report</td>
+</tr>
+<tr class="odd">
+<td>HC3</td>
+<td>a type of robust standard error for regressions</td>
+</tr>
+<tr class="even">
+<td>HD35</td>
+<td>Heat Days: days with a maximum temperature of 35 °C or more</td>
+</tr>
+<tr class="odd">
+<td>IPCC</td>
+<td>Intergovernmental Panel on Climate Change</td>
+</tr>
+<tr class="even">
+<td>INFORM</td>
+<td>Index for Risk Management (European Commission)</td>
+</tr>
+<tr class="odd">
+<td>JRC</td>
+<td>Joint Research Centre of the European Commission</td>
+</tr>
+<tr class="even">
+<td>M1, M2</td>
+<td>the two regression models (without and with country effects)</td>
+</tr>
+<tr class="odd">
+<td>MERRA-2</td>
+<td>Modern-Era Retrospective analysis for Research and Applications, version 2 (NASA climate data)</td>
+</tr>
+<tr class="even">
+<td>N</td>
+<td>number of observations (regions)</td>
+</tr>
+<tr class="odd">
+<td>NASA POWER</td>
+<td>NASA Prediction Of Worldwide Energy Resources (daily climate data)</td>
+</tr>
+<tr class="even">
+<td>OECD</td>
+<td>Organisation for Economic Co-operation and Development</td>
+</tr>
+<tr class="odd">
+<td>OLS</td>
+<td>Ordinary Least Squares (linear regression)</td>
+</tr>
+<tr class="even">
+<td>p</td>
+<td>p-value: probability of a result at least this strong if there were no real link</td>
+</tr>
+<tr class="odd">
+<td>R²</td>
+<td>share of the variation of SHDI explained by the model</td>
+</tr>
+<tr class="even">
+<td>R50</td>
+<td>days with more than 50 mm of rain</td>
+</tr>
+<tr class="odd">
+<td>Rx1day</td>
+<td>heaviest rain in one day of the year</td>
+</tr>
+<tr class="even">
+<td>rho</td>
+<td>Spearman rank correlation, from −1 to +1</td>
+</tr>
+<tr class="odd">
+<td>SHDI</td>
+<td>Subnational Human Development Index (Global Data Lab)</td>
+</tr>
+<tr class="even">
+<td>TR25</td>
+<td>Tropical nights: nights with a minimum temperature of 25 °C or more</td>
+</tr>
+<tr class="odd">
+<td>WBAL</td>
+<td>Water Balance: rain minus evapotranspiration</td>
+</tr>
+<tr class="even">
+<td>WDI</td>
+<td>World Development Indicators (World Bank)</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="introduction" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">1</span> Introduction</h2>
 <section id="context" class="level3" data-number="1.1">
 <h3 data-number="1.1" class="anchored" data-anchor-id="context"><span class="header-section-number">1.1</span> Context</h3>
-<p>Climate risk is often discussed country by country. But a country is not uniform: in India, Rajasthan has about 170 days above 35 °C per year, while Kerala has almost none. Human development also changes a lot inside a country. To know where help is most needed, we need to work at a smaller scale.</p>
+<p>Climate risk is often discussed country by country. But a country is not uniform: in India, Rajasthan has about 170 days above 35 °C per year, while Kerala has almost none. Human development also changes a lot inside a country. To know where help is most needed, we need to work at a smaller scale. Earlier studies show why this matters: Nordhaus (2006) found that climate and geography explain a large part of economic output when it is measured on a fine grid instead of by country, and Dell, Jones and Olken (2009) showed that the negative link between temperature and income also exists <em>inside</em> countries. Climate shocks also hit people with fewer resources harder (Hallegatte et al., 2016), and high temperatures reduce economic production (Burke, Hsiang &amp; Miguel, 2015).</p>
 <p>We work at <strong>admin-1 level</strong> (states, provinces, regions). This is the smallest level where climate, population and development data are all available for free.</p>
 </section>
 <section id="research-question-and-hypotheses" class="level3" data-number="1.2">
@@ -3310,11 +3410,11 @@ Note
 <li><strong>H2.</strong> This is still true when we compare regions of the same country.</li>
 <li><strong>H3.</strong> The risk ranking does not change much when we change the way the index is built.</li>
 </ul>
-<p>H2 is important. India is both hotter and poorer than France and the USA, so a correlation on all regions could only say “India is different”. Comparing regions inside the same country is a fairer test.</p>
+<p>H2 is important. India has a hotter climate and a lower average SHDI than France and the USA, so a correlation on all regions could only say “India is different”. Comparing regions inside the same country is a fairer test. Economists have long debated whether the link between geography and income comes from climate itself (Gallup, Sachs &amp; Mellinger, 1999) or from history and institutions (Acemoglu, Johnson &amp; Robinson, 2002). Comparing regions of the same country keeps national institutions the same, which is the approach used by Dell, Jones and Olken (2009).</p>
 </section>
 <section id="scope" class="level3" data-number="1.3">
 <h3 data-number="1.3" class="anchored" data-anchor-id="scope"><span class="header-section-number">1.3</span> Scope</h3>
-<p>The pilot covers three countries, chosen because they are very different: France (rich, temperate, small), the USA (rich, very large, many climates) and India (lower-middle income, hot, very populated). The code can run on other countries by changing one line in <code>config/config.yaml</code>.</p>
+<p>The pilot covers three countries, chosen because they are very different: France (high income, temperate climate, small), the USA (high income, very large, many climates) and India (lower-middle income, hot climate, very large population). The code can run on other countries by changing one line in <code>config/config.yaml</code>.</p>
 <div class="callout-warn">
 <p><strong>What this report does not claim.</strong> All results are associations. We do not prove that climate causes low development. History, geography and institutions can explain both.</p>
 </div>
@@ -3382,8 +3482,8 @@ Note
 </section>
 <section id="climate-data" class="level3" data-number="2.2">
 <h3 data-number="2.2" class="anchored" data-anchor-id="climate-data"><span class="header-section-number">2.2</span> Climate data</h3>
-<p>NASA POWER gives one daily time series per point. Inside each region we choose between 1 and 8 sample points (one point per 40,000 km²), spread over the whole region. This gives <strong>308 points</strong> in total. For each point we download every day from 1991 to 2023.</p>
-<p>From the daily data we compute six indicators per year, then take the mean over 2004-2023:</p>
+<p>NASA POWER gives one daily time series per point. Its data come from the MERRA-2 reanalysis of NASA (Gelaro et al., 2017). Inside each region we choose between 1 and 8 sample points (one point per 40,000 km²), spread over the whole region. This gives <strong>308 points</strong> in total. For each point we download every day from 1991 to 2023.</p>
+<p>From the daily data we compute six indicators per year, then take the mean over 2004-2023. They follow the logic of the standard climate extreme indices of the ETCCDI expert team (Zhang et al., 2011), with thresholds chosen for heat stress and heavy rain:</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -3478,31 +3578,27 @@ Note
 </section>
 <section id="population" class="level3" data-number="2.3">
 <h3 data-number="2.3" class="anchored" data-anchor-id="population"><span class="header-section-number">2.3</span> Population</h3>
-<p>GHS-POP gives the number of people in each 1 km cell. We sum the cells inside each region. We also give each person to the nearest climate point. The two totals agree (1,803.1 million against 1,805.5 million, a 0.1% difference).</p>
+<p>GHS-POP gives the number of people in each 1 km cell. We sum the cells inside each region. We also give each person to the nearest climate point. The two totals agree (1,803.1 million against 1,805.5 million, a 0.1% difference). With these two pieces we also compute <em>person-days of extreme heat</em> (people × hot days), a measure used in heat exposure studies (Tuholske et al., 2021). It is shown in Table 1 as extra information, but it is not used in the risk index.</p>
 </section>
 <section id="development" class="level3" data-number="2.4">
 <h3 data-number="2.4" class="anchored" data-anchor-id="development"><span class="header-section-number">2.4</span> Development</h3>
-<p>The SHDI comes from the Global Data Lab. Its region names are not always the same as in geoBoundaries (for example <em>Odisha</em> / <em>Orissa</em>). We matched names in three steps: exact match, a short manual list, then fuzzy matching. <strong>99 of the 105 regions</strong> have an SHDI. The 6 others (Ladakh and five small US territories) are kept on the climate maps but are not used in the tests. We do not fill them with the country average, because this would create fake data.</p>
+<p>The SHDI comes from the Global Data Lab (Smits &amp; Permanyer, 2019). It is computed like the national Human Development Index (health, education and income), but for regions. Its region names are not always the same as in geoBoundaries (for example <em>Odisha</em> / <em>Orissa</em>). We matched names in three steps: exact match, a short manual list, then fuzzy matching. <strong>99 of the 105 regions</strong> have an SHDI. The 6 others (Ladakh and five small US territories) are kept on the climate maps but are not used in the tests. We do not fill them with the country average, because this would create fake data.</p>
 </section>
 </section>
 <section id="method" class="level2" data-number="3">
 <h2 data-number="3" class="anchored" data-anchor-id="method"><span class="header-section-number">3</span> Method</h2>
 <section id="the-risk-index" class="level3" data-number="3.1">
 <h3 data-number="3.1" class="anchored" data-anchor-id="the-risk-index"><span class="header-section-number">3.1</span> The risk index</h3>
-<p>We follow the IPCC idea: risk needs a <strong>hazard</strong>, people <strong>exposed</strong> to it, and a <strong>vulnerability</strong>. Each part is a score between 0 and 1.</p>
-<p>To build each score we use <strong>percentile ranks</strong>: the region with the lowest value gets a score close to 0 and the region with the highest value gets 1. Ranks let us mix days, millimetres and index points, and one extreme region does not squash all the others.</p>
+<p>We follow the IPCC idea: risk comes from the interaction of a <strong>hazard</strong>, people <strong>exposed</strong> to it, and their <strong>vulnerability</strong> (Cardona et al., 2012; IPCC, 2014). Each part is a score between 0 and 1.</p>
+<p>To build each score we use <strong>percentile ranks</strong>: the region with the lowest value gets a score close to 0 and the region with the highest value gets 1. Ranks let us mix days, millimetres and index points, and one extreme region does not squash all the others. Rank-based normalisation is one of the standard methods described in the OECD/JRC handbook on composite indicators (Nardo et al., 2008).</p>
 <p><strong>Hazard</strong> is the mean of three sub-scores:</p>
-<p><span class="math display">\[
-\text{Hazard} = \tfrac{1}{3}\left(H_{\text{heat}} + H_{\text{dry}} + H_{\text{wet}}\right)
-\]</span></p>
-<p><span class="math inline">\(H_{\text{heat}}\)</span> is the mean rank of HD35 and TR25, <span class="math inline">\(H_{\text{dry}}\)</span> the mean rank of CDD and (reversed) WBAL, and <span class="math inline">\(H_{\text{wet}}\)</span> the mean rank of Rx1day and R50.</p>
+<pre><code>Hazard = (H_heat + H_dry + H_wet) / 3</code></pre>
+<p><code>H_heat</code> is the mean rank of HD35 and TR25, <code>H_dry</code> the mean rank of CDD and (reversed) WBAL, and <code>H_wet</code> the mean rank of Rx1day and R50.</p>
 <p><strong>Exposure</strong> is the rank of the region’s population. We do not multiply population by heat days here, because heat is already in the hazard score: it would be counted twice.</p>
-<p><strong>Vulnerability</strong> is <span class="math inline">\(1 - \text{rank(SHDI)}\)</span>. Low development means less money, health and education to face a climate shock.</p>
+<p><strong>Vulnerability</strong> is <code>1 - rank(SHDI)</code>. Low development means less money, health and education to face a climate shock.</p>
 <p><strong>Risk</strong> is the product of the three:</p>
-<p><span class="math display">\[
-\text{Risk} = \text{Hazard} \times \text{Exposure} \times \text{Vulnerability}
-\]</span></p>
-<p>We use a product because a region needs all three to be at risk: a hot desert with nobody living there is not a disaster.</p>
+<pre><code>Risk = Hazard x Exposure x Vulnerability</code></pre>
+<p>We use a product because a region needs all three to be at risk: a hot desert with nobody living there is not a disaster. The INFORM risk index of the European Commission also combines its parts by multiplication, so that the risk is zero when one part is zero (Marin-Ferrer, Vernaccini &amp; Poljansek, 2017).</p>
 </section>
 <section id="three-versions-of-the-index" class="level3" data-number="3.2">
 <h3 data-number="3.2" class="anchored" data-anchor-id="three-versions-of-the-index"><span class="header-section-number">3.2</span> Three versions of the index</h3>
@@ -3537,18 +3633,18 @@ Note
 </tr>
 </tbody>
 </table>
-<p>The <code>per_person</code> version is useful because big regions always get a high exposure score. If the top regions stay the same without population, the ranking is not only about size.</p>
+<p>Testing several versions of an index is recommended practice, because the weights and the formula are choices (Saisana, Saltelli &amp; Tarantola, 2005; Nardo et al., 2008). The <code>per_person</code> version is useful because big regions always get a high exposure score. If the top regions stay the same without population, the ranking is not only about size.</p>
 </section>
 <section id="statistical-tests" class="level3" data-number="3.3">
 <h3 data-number="3.3" class="anchored" data-anchor-id="statistical-tests"><span class="header-section-number">3.3</span> Statistical tests</h3>
 <ul>
-<li><strong>H1:</strong> Spearman rank correlation between hazard and SHDI, on all regions and then country by country. We use Spearman because it works on ranks and does not need a normal distribution. We also compare the median SHDI of the more hazardous half and the less hazardous half.</li>
+<li><strong>H1:</strong> Spearman rank correlation between hazard and SHDI, on all regions and then country by country. We use Spearman (1904) because it works on ranks and does not need a normal distribution. We also compare the median SHDI of the more hazardous half and the less hazardous half.</li>
 <li><strong>H2:</strong> two linear regressions (OLS) with SHDI as the outcome:
 <ul>
-<li>M1: <span class="math inline">\(\text{SHDI} = a + b \cdot \text{Hazard}\)</span></li>
+<li>M1: <code>SHDI = a + b x Hazard</code></li>
 <li>M2: the same, plus one dummy variable per country (“country effect”).</li>
 </ul>
-The country dummies remove the average difference between countries, so <span class="math inline">\(b\)</span> in M2 only uses differences between regions of the same country. We also fit M1 in each country separately. We use robust (HC3) standard errors.</li>
+The country dummies remove the average difference between countries, so <code>b</code> in M2 only uses differences between regions of the same country. We also fit M1 in each country separately. We use robust (HC3) standard errors, which stay correct when the error variance is not the same for every region and are recommended for small samples (Long &amp; Ervin, 2000).</li>
 <li><strong>H3:</strong> Spearman correlation between the rankings of the three versions, and the number of regions that are in the top 10 of both versions.</li>
 </ul>
 <p>We use a 5% significance level.</p>
@@ -4025,13 +4121,13 @@ The country dummies remove the average difference between countries, so <span cl
 <h2 data-number="6" class="anchored" data-anchor-id="discussion-and-limitations"><span class="header-section-number">6</span> Discussion and limitations</h2>
 <section id="what-the-results-mean" class="level3" data-number="6.1">
 <h3 data-number="6.1" class="anchored" data-anchor-id="what-the-results-mean"><span class="header-section-number">6.1</span> What the results mean</h3>
-<p>Climate hazard and low human development overlap, mostly between countries but also inside India and the USA. The effect inside countries is moderate: climate is one factor among many. For policy, this means that help should target <strong>regions</strong>, not whole countries, and that the regions with both high hazard and low development (map above) should come first.</p>
+<p>Climate hazard and low human development overlap, mostly between countries but also inside India and the USA. The effect inside countries is moderate: climate is one factor among many. This is the same pattern as in Dell, Jones and Olken (2009): the link inside countries is real but smaller than the link between countries. For policy, this means that help should target <strong>regions</strong>, not whole countries, and that the regions with both high hazard and low development (map above) should come first.</p>
 </section>
 <section id="limitations" class="level3" data-number="6.2">
 <h3 data-number="6.2" class="anchored" data-anchor-id="limitations"><span class="header-section-number">6.2</span> Limitations</h3>
 <ol type="1">
-<li><strong>Association, not causation.</strong> History, geography and the economy can explain both climate and development.</li>
-<li><strong>Neighbouring regions are similar.</strong> The regressions treat each region as independent, but neighbours share climate and economy. So the p-values are probably too small. A spatial regression model would be a good next step.</li>
+<li><strong>Association, not causation.</strong> History, geography and the economy can explain both climate and development (Gallup, Sachs &amp; Mellinger, 1999; Acemoglu, Johnson &amp; Robinson, 2002).</li>
+<li><strong>Neighbouring regions are similar.</strong> The regressions treat each region as independent, but neighbours share climate and economy. So the p-values are probably too small. A spatial regression model (Anselin, 1988) would be a good next step.</li>
 <li><strong>Only 3 countries and 99 regions.</strong> France has only 13 regions, so its results are uncertain.</li>
 <li><strong>One development indicator.</strong> SHDI does not show inequality inside a region.</li>
 <li><strong>Fixed thresholds.</strong> 35 °C and 50 mm are choices. France has almost no days above 35 °C, so a lower threshold would change its map.</li>
@@ -4057,11 +4153,11 @@ tests/                    unit tests and data checks (pytest)</code></pre>
 </section>
 <section id="running-the-pipeline" class="level3" data-number="7.2">
 <h3 data-number="7.2" class="anchored" data-anchor-id="running-the-pipeline"><span class="header-section-number">7.2</span> Running the pipeline</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> all          <span class="co"># download, build the index, run the analysis, export the figures</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> validate     <span class="co"># 8 data checks (exit code 1 if one fails)</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> report       <span class="co"># build the report tables and render this report</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> load         <span class="co"># optional: copy the tables into PostGIS (docker compose up -d)</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> app          <span class="co"># dashboard at http://127.0.0.1:8050</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> all          <span class="co"># download, build the index, run the analysis, export the figures</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> validate     <span class="co"># 8 data checks (exit code 1 if one fails)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> report       <span class="co"># build the report tables and render this report</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> load         <span class="co"># optional: copy the tables into PostGIS (docker compose up -d)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cro</span> app          <span class="co"># dashboard at http://127.0.0.1:8050</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="quality-checks" class="level3" data-number="7.3">
 <h3 data-number="7.3" class="anchored" data-anchor-id="quality-checks"><span class="header-section-number">7.3</span> Quality checks</h3>
@@ -4104,19 +4200,37 @@ tests/                    unit tests and data checks (pytest)</code></pre>
 <ul>
 <li>add more countries (the code is ready, it is a change in the config file);</li>
 <li>use a spatial regression model to take neighbours into account;</li>
-<li>add a poverty indicator to see inequality inside regions;</li>
+<li>add a household income indicator to see inequality inside regions;</li>
 <li>test other heat thresholds (for example 30 °C).</li>
 </ul>
 </section>
 <section id="references" class="level2" data-number="9">
 <h2 data-number="9" class="anchored" data-anchor-id="references"><span class="header-section-number">9</span> References</h2>
+<p>Acemoglu, D., Johnson, S., &amp; Robinson, J. A. (2002). Reversal of fortune: Geography and institutions in the making of the modern world income distribution. <em>The Quarterly Journal of Economics</em>, 117(4), 1231-1294.</p>
+<p>Anselin, L. (1988). <em>Spatial Econometrics: Methods and Models</em>. Dordrecht: Kluwer Academic Publishers.</p>
+<p>Burke, M., Hsiang, S. M., &amp; Miguel, E. (2015). Global non-linear effect of temperature on economic production. <em>Nature</em>, 527, 235-239.</p>
+<p>Cardona, O. D., van Aalst, M. K., Birkmann, J., et al. (2012). Determinants of risk: exposure and vulnerability. In C. B. Field et al. (Eds.), <em>Managing the Risks of Extreme Events and Disasters to Advance Climate Change Adaptation</em> (IPCC Special Report, chapter 2, pp. 65-108). Cambridge University Press.</p>
+<p>Dell, M., Jones, B. F., &amp; Olken, B. A. (2009). Temperature and income: Reconciling new cross-sectional and panel estimates. <em>American Economic Review</em>, 99(2), 198-204.</p>
+<p>Gallup, J. L., Sachs, J. D., &amp; Mellinger, A. D. (1999). Geography and economic development. <em>International Regional Science Review</em>, 22(2), 179-232.</p>
+<p>Gelaro, R., McCarty, W., Suárez, M. J., et al. (2017). The Modern-Era Retrospective Analysis for Research and Applications, Version 2 (MERRA-2). <em>Journal of Climate</em>, 30(14), 5419-5454.</p>
 <p>Global Data Lab. <em>Subnational Human Development Index (SHDI)</em>. Radboud University. <a href="https://globaldatalab.org/shdi/" class="uri">https://globaldatalab.org/shdi/</a></p>
+<p>Hallegatte, S., Bangalore, M., Bonzanigo, L., et al. (2016). <em>Shock Waves: Managing the Impacts of Climate Change on Poverty</em>. Climate Change and Development Series. Washington, DC: World Bank.</p>
 <p>Hargreaves, G. H., &amp; Samani, Z. A. (1985). Reference crop evapotranspiration from temperature. <em>Applied Engineering in Agriculture</em>, 1(2), 96-99.</p>
-<p>IPCC (2022). <em>Climate Change 2022: Impacts, Adaptation and Vulnerability</em>. Contribution of Working Group II to the Sixth Assessment Report.</p>
+<p>IPCC (2014). Summary for policymakers. In <em>Climate Change 2014: Impacts, Adaptation, and Vulnerability. Part A</em> (Working Group II contribution to the Fifth Assessment Report). Cambridge University Press.</p>
+<p>IPCC (2022). <em>Climate Change 2022: Impacts, Adaptation and Vulnerability</em>. Working Group II contribution to the Sixth Assessment Report. Cambridge University Press.</p>
+<p>Long, J. S., &amp; Ervin, L. H. (2000). Using heteroscedasticity consistent standard errors in the linear regression model. <em>The American Statistician</em>, 54(3), 217-224.</p>
+<p>Marin-Ferrer, M., Vernaccini, L., &amp; Poljansek, K. (2017). <em>Index for Risk Management - INFORM: Concept and Methodology Report, Version 2017</em>. Luxembourg: Publications Office of the European Union (European Commission, Joint Research Centre).</p>
 <p>NASA Langley Research Center. <em>POWER Project Data Access Viewer</em>. <a href="https://power.larc.nasa.gov/" class="uri">https://power.larc.nasa.gov/</a></p>
+<p>Nardo, M., Saisana, M., Saltelli, A., Tarantola, S., Hoffman, A., &amp; Giovannini, E. (2008). <em>Handbook on Constructing Composite Indicators: Methodology and User Guide</em>. Paris: OECD Publishing (with the European Commission, Joint Research Centre).</p>
+<p>Nordhaus, W. D. (2006). Geography and macroeconomics: New data and new findings. <em>Proceedings of the National Academy of Sciences</em>, 103(10), 3510-3517.</p>
 <p>Pesaresi, M., et al. (2023). <em>GHS-POP R2023A - GHS population grid multitemporal (1975-2030)</em>. European Commission, JRC.</p>
 <p>Runfola, D., et al. (2020). geoBoundaries: A global database of political administrative boundaries. <em>PLOS ONE</em>, 15(4), e0231866.</p>
+<p>Saisana, M., Saltelli, A., &amp; Tarantola, S. (2005). Uncertainty and sensitivity analysis techniques as tools for the quality assessment of composite indicators. <em>Journal of the Royal Statistical Society: Series A</em>, 168(2), 307-323.</p>
+<p>Smits, J., &amp; Permanyer, I. (2019). The Subnational Human Development Database. <em>Scientific Data</em>, 6, 190038.</p>
+<p>Spearman, C. (1904). The proof and measurement of association between two things. <em>The American Journal of Psychology</em>, 15(1), 72-101.</p>
+<p>Tuholske, C., Caylor, K., Funk, C., et al. (2021). Global urban population exposure to extreme heat. <em>Proceedings of the National Academy of Sciences</em>, 118(41), e2024792118.</p>
 <p>World Bank. <em>World Development Indicators</em>. <a href="https://databank.worldbank.org/source/world-development-indicators" class="uri">https://databank.worldbank.org/source/world-development-indicators</a></p>
+<p>Zhang, X., Alexander, L., Hegerl, G. C., et al. (2011). Indices for monitoring changes in extremes based on daily temperature and precipitation data. <em>WIREs Climate Change</em>, 2(6), 851-870.</p>
 </section>
 
 </main>
