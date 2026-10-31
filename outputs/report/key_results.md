@@ -4,42 +4,33 @@
 - Population covered: **1803.1 million**.
 - Regions with development data: **99**.
 
-## H1 - exposure is concentrated
-- The top 10% most hazardous regions hold **1.38x** their population share of person-days of extreme heat (95% CI 1.21 to 1.75).
+## H1 - more hazard goes with lower development
+- All regions: Spearman rho = **-0.59** (p = 1.4e-10, N = 99).
+- Median SHDI: **0.786** in the more hazardous half, **0.936** in the less hazardous half.
+- FRA: rho = 0.18 (p = 0.57, N = 13).
+- IND: rho = -0.48 (p = 0.0033, N = 35).
+- USA: rho = -0.48 (p = 0.00035, N = 51).
 
-## H2 - high hazard goes with lower development
-- Median SHDI in high-hazard regions: **0.786**.
-- Median SHDI in low-hazard regions: **0.936**.
-- Mann-Whitney p = **1.44e-06**, Cliff's delta = **-0.56**.
+## H2 - is it still true inside countries?
+- Without country effects: coefficient **-0.39** (95% CI -0.46 to -0.32).
+- With country effects: coefficient **-0.10** (95% CI -0.14 to -0.06, N = 99).
+- The coefficient is the change in SHDI from the least to the most hazardous region.
 
-## H3 - does it survive country fixed effects?
-- A one standard deviation increase in hazard is associated with **-0.21** standard deviations of SHDI (95% CI -0.32 to -0.11, p = 0, N = 99) within countries.
-
-## H4 - spatial clustering
-- Moran's I for `FRA:hazard_equal`: **0.55**.
-- Moran's I for `FRA:shdi`: **-0.31**.
-- Moran's I for `FRA:exposure_score`: **0.51**.
-- Moran's I for `FRA:risk_equal`: **0.59**.
-- Moran's I for `IND:hazard_equal`: **0.47**.
-- Moran's I for `IND:shdi`: **0.38**.
-- Moran's I for `IND:exposure_score`: **0.20**.
-- Moran's I for `IND:risk_equal`: **0.25**.
-- Moran's I for `USA:hazard_equal`: **0.69**.
-- Moran's I for `USA:shdi`: **0.55**.
-- Moran's I for `USA:exposure_score`: **0.61**.
-- Moran's I for `USA:risk_equal`: **0.72**.
+## H3 - is the ranking stable?
+- Lowest Spearman correlation between two index versions: **0.86**.
+- At least **9** of the top 10 regions are the same in every pair of versions.
 
 ## Highest-risk regions
 
 1. Bihār (India) - risk 0.825
-1. Uttar Pradesh (India) - risk 0.815
-1. Gujarāt (India) - risk 0.788
-1. Madhya Pradesh (India) - risk 0.770
-1. Jhārkhand (India) - risk 0.705
-1. Odisha (India) - risk 0.696
-1. Andhra Pradesh (India) - risk 0.692
-1. Mahārāshtra (India) - risk 0.667
-1. Chhattīsgarh (India) - risk 0.649
-1. West Bengal (India) - risk 0.648
+2. Uttar Pradesh (India) - risk 0.815
+3. Madhya Pradesh (India) - risk 0.786
+4. Gujarāt (India) - risk 0.757
+5. Jhārkhand (India) - risk 0.713
+6. Odisha (India) - risk 0.711
+7. Andhra Pradesh (India) - risk 0.685
+8. West Bengal (India) - risk 0.674
+9. Mahārāshtra (India) - risk 0.667
+10. Chhattīsgarh (India) - risk 0.635
 
 > These are associations, not causal effects. See the limitations section.

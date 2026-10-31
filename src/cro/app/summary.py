@@ -207,160 +207,151 @@ def _copy(lang: str, values: dict) -> dict[str, str]:
         c = {
             "lang": "fr",
             "title": "Synthèse &middot; Observatoire du risque climatique &amp; du développement humain",
-            "eyebrow": "synthèse &amp; rapport &middot; édition pilote",
+            "eyebrow": "synthèse &amp; rapport &middot; projet pilote",
             "scope": "france / inde / états-unis",
-            "hero_title": "la synthèse<span>du rapport statistique.</span>",
+            "hero_title": "la synthèse<span>du rapport.</span>",
             "standfirst": (
-                "Une lecture de deux minutes du rapport écrit : la question, la "
-                "construction de l'indice, les quatre constats, les tableaux qui les "
-                "étayent et les limites de ce qu'ils peuvent dire. Chaque chiffre est "
-                "produit à partir des mêmes tableaux que le document complet : les "
-                "deux ne peuvent pas diverger."
+                "Le rapport en deux minutes : la question, la construction de "
+                "l'indice, les quatre résultats et leurs limites. Tous les chiffres "
+                "viennent des mêmes tableaux que le rapport complet."
             ),
             "stat_regions": "régions admin-1",
             "stat_people": "personnes couvertes",
-            "stat_concentration": "concentration de l'exposition",
-            "stat_rho": "corrélation aléa-IDH",
+            "stat_rho": "corrélation aléa-IDH (toutes régions)",
+            "stat_within": "effet de l'aléa dans les pays",
             "q_num": "01", "q_title": "la question",
             "q_text1": (
-                "Les lieux les plus exposés au stress climatique sont-ils aussi ceux "
-                "où le développement humain est le plus faible ? Et si oui, s'agit-il "
-                "seulement d'un effet pays, ou cela tient-il aussi entre les régions "
-                "d'un même pays ?"
+                "Les régions les plus exposées aux extrêmes climatiques sont-elles "
+                "aussi celles où le développement humain est le plus faible ? Et "
+                "est-ce encore vrai quand on compare les régions d'un même pays ?"
             ),
             "q_text2": (
-                f"Le pilote couvre {v['n_regions']} régions admin-1 en France, en Inde "
-                f"et aux États-Unis : {v['population_bn']} milliards de personnes. Le "
-                "climat est mesuré à partir des relevés quotidiens NASA POWER "
-                "(1991&ndash;2023), la population à partir de la grille GHS-POP 2020, "
-                "et le développement à partir de l'indice de développement humain "
-                "infranational (IDH-S)."
+                f"Le projet couvre {v['n_regions']} régions (États, provinces, régions) "
+                f"en France, en Inde et aux États-Unis, soit {v['population_bn']} "
+                "milliards de personnes. Le climat vient de NASA POWER "
+                "(1991&ndash;2023), la population de GHS-POP 2020 et le développement "
+                "de l'indice de développement humain infranational (IDH-S)."
             ),
             "m_num": "02", "m_title": "comment l'indice est construit",
             "card_hazard": "aléa",
             "card_hazard_text": (
                 "Six mesures climatiques (jours au-dessus de 35&nbsp;&deg;C, nuits "
-                "tropicales, durée de la sécheresse, bilan hydrique, pluie "
-                "journalière maximale, jours très humides) sont converties en "
-                "centiles, puis moyennées en sous-indices chaleur, sécheresse et "
-                "humidité."
+                "tropicales, plus longue période sèche, bilan hydrique, plus forte "
+                "pluie en un jour, jours très pluvieux). Chacune devient un rang de "
+                "0 à 1, puis on fait la moyenne chaleur / sec / humide."
             ),
             "card_exposure": "exposition",
             "card_exposure_text": (
-                "Population &times; jours de chaleur. Chaque personne est rattachée au "
-                "point climatique le plus proche : une région chaude mais vide ne se "
-                "classe donc pas comme une région chaude et densément peuplée."
+                "Le nombre d'habitants de la région, transformé en rang de 0 à 1. On "
+                "n'utilise pas la chaleur ici, car elle est déjà dans l'aléa : sinon "
+                "elle serait comptée deux fois."
             ),
             "card_vulnerability": "vulnérabilité",
             "card_vulnerability_text": (
-                "Un moins le rang centile de l'IDH-S. Un développement plus faible "
-                "signifie une vulnérabilité plus forte. Les régions sans IDH-S "
-                "conservent leurs scores d'aléa et d'exposition mais sont exclues des "
-                "modèles de développement."
+                "1 moins le rang de l'IDH-S. Un développement faible donne une "
+                "vulnérabilité forte. Les 6 régions sans IDH-S n'ont pas de score de "
+                "risque."
             ),
             "card_risk": "risque",
             "card_risk_text": (
-                "La moyenne géométrique de l'aléa, de l'exposition et de la "
-                "vulnérabilité (cadre du GIEC). Une région doit être élevée sur les "
-                "trois pour bien se classer. Des versions additive et pondérée par "
-                "ACP servent de tests de robustesse."
+                "Aléa &times; exposition &times; vulnérabilité (idée du GIEC). Une "
+                "région doit être haute sur les trois pour avoir un risque élevé. "
+                "Deux autres versions (moyenne simple, et risque sans la population) "
+                "servent à vérifier le classement."
             ),
             "method_source": (
-                "Tous les ingrédients sont des centiles de 0 à 1, ce qui explique que "
-                "l'indice de risque composite soit lui aussi sur une échelle de 0 à 1."
+                "Tous les scores sont des rangs entre 0 et 1, donc le risque est "
+                "aussi entre 0 et 1."
             ),
-            "f_num": "03", "f_title": "ce que nous avons trouvé",
-            "find1_title": "L'exposition est concentrée",
+            "f_num": "03", "f_title": "les résultats",
+            "find1_title": "Plus d'aléa, moins de développement (H1)",
             "find1_body": (
-                f"Les 10&nbsp;% de régions les plus exposées à l'aléa concentrent "
-                f"{v['ratio']} fois leur part de population en jours-personnes de "
-                f"chaleur extrême (IC à 95&nbsp;% : {v['ci_low']} à {v['ci_high']}). "
-                "L'exposition à la chaleur n'est pas répartie uniformément dans le "
-                "pilote."
+                f"Sur toutes les régions, la corrélation de Spearman entre l'aléa et "
+                f"l'IDH-S est de {v['rho']} (p {v['p_value']}). L'IDH-S médian est de "
+                f"{v['median_high']} dans la moitié la plus exposée et de "
+                f"{v['median_low']} dans l'autre moitié. Mais cet écart vient surtout "
+                "de la différence entre l'Inde et les deux autres pays."
             ),
-            "find2_title": "Un aléa élevé va de pair avec un développement plus faible",
+            "find2_title": "Pays par pays, le lien est plus faible (H1)",
             "find2_body": (
-                f"L'IDH-S médian est de {v['median_high']} dans les régions à fort "
-                f"aléa et de {v['median_low']} dans celles à faible aléa "
-                f"(Mann&ndash;Whitney p {v['p_value']}, delta de Cliff "
-                f"{v['cliffs']}). La corrélation de rang est de {v['rho']}."
+                f"La corrélation est de {v['rho_ind']} en Inde et de {v['rho_usa']} aux "
+                f"États-Unis. En France elle est de {v['rho_fra']} (p = {v['p_fra']}) : "
+                "pas de lien visible, mais il n'y a que 13 régions et peu de "
+                "différences de climat."
             ),
-            "find3_title": "L'effet résiste aux effets fixes pays",
+            "find3_title": "Le lien reste négatif dans les pays (H2)",
             "find3_body": (
-                f"Une hausse d'un écart-type de l'aléa correspond à {v['beta']} "
-                f"écart-type d'IDH-S à l'intérieur des pays (IC à 95&nbsp;% : "
-                f"{v['beta_low']} à {v['beta_high']}, N = {v['n_obs']}). La pente est "
-                f"de {v['slope_ind']} en Inde et de {v['slope_usa']} aux États-Unis ; "
-                f"en France, elle est de {v['slope_fra']} car la plage d'aléa est "
-                "étroite."
+                f"Dans une régression linéaire, le coefficient de l'aléa passe de "
+                f"{v['beta_all']} à {v['beta']} quand on ajoute un effet pays "
+                f"(IC à 95&nbsp;% : {v['beta_low']} à {v['beta_high']}, "
+                f"N = {v['n_obs']}). Concrètement : +0,1 d'aléa va avec "
+                f"{v['beta_tenth']} d'IDH-S, à pays égal."
             ),
-            "find4_title": "Le motif est spatialement agrégé",
+            "find4_title": "Le classement est stable (H3)",
             "find4_body": (
-                f"Le I de Moran est de {v['moran_risk']} pour le risque composite, "
-                f"{v['moran_hazard']} pour l'aléa et {v['moran_shdi']} pour l'IDH-S "
-                "(tous p &le; 0,001) : les régions voisines se ressemblent, la carte "
-                "n'est donc pas du bruit. L'exception est l'IDH-S en France, où "
-                f"I = {v['moran_fra_shdi']} et l'agrégation n'est pas significative."
+                f"Entre les trois versions de l'indice, la corrélation des rangs est "
+                f"d'au moins {v['min_rho']}, et au moins {v['min_top10']} des 10 "
+                "premières régions sont les mêmes. Même sans la population, les "
+                "grands États indiens restent en tête : ce n'est pas seulement un "
+                "effet de taille."
             ),
             "p_num": "04", "p_title": "où se situe le risque",
             "p_text": (
-                "Les dix régions les plus à risque sont toutes en Inde, et l'Inde "
-                f"concentre {v['india_share']}&nbsp;% de tous les jours-personnes de "
-                "chaleur extrême du pilote. Le classement est un outil de repérage, "
-                "pas un verdict : il indique où regarder d'abord."
+                "Les dix régions les plus à risque sont toutes en Inde, car l'Inde "
+                "est à la fois plus chaude et moins développée. Pour voir les "
+                "différences en France ou aux États-Unis, choisissez un pays dans le "
+                "tableau de bord. Le classement indique où regarder en premier ; ce "
+                "n'est pas un verdict."
             ),
-            "l_num": "05", "l_title": "ce qui changerait la réponse",
+            "l_num": "05", "l_title": "les limites",
             "limit1_b": "Association, pas causalité.",
             "limit1": (
-                "Climat, histoire, institutions et géographie sont enchevêtrés. Les "
-                "modèles montrent une association robuste ; ils n'identifient pas un "
-                "effet causal."
+                "Le climat, l'histoire et l'économie sont liés. Les modèles montrent "
+                "un lien, pas une cause."
             ),
             "limit2_b": "Six régions n'ont pas d'IDH-S.",
             "limit2": (
-                "Les tests de développement portent sur 99 des 105 régions ; l'aléa, "
-                "l'exposition et le risque couvrent toujours les 105."
+                "Les tests utilisent 99 régions sur 105 ; l'aléa couvre toujours les "
+                "105."
             ),
-            "limit3_b": "Les limites admin-1 sont grossières.",
+            "limit3_b": "Les régions voisines se ressemblent.",
             "limit3": (
-                "Une grande région peut cacher une ville surchauffée, et une petite "
-                "peut sembler pire que son environnement."
+                "Les observations ne sont pas vraiment indépendantes, donc les "
+                "p-values sont sans doute trop petites. Un modèle spatial serait "
+                "l'étape suivante."
             ),
             "limit4_b": "Un seul indicateur de développement.",
             "limit4": (
-                "L'IDH-S ne saisit pas les inégalités à l'intérieur d'une région, "
-                "souvent la dimension qui compte pour l'adaptation."
+                "L'IDH-S ne montre pas les inégalités à l'intérieur d'une région."
             ),
-            "limit5_b": "Climat historique uniquement.",
+            "limit5_b": "Des seuils fixes.",
             "limit5": (
-                "L'indice décrit 1991&ndash;2023, pas des scénarios futurs. Une annexe "
-                "CMIP6 est volontairement laissée de côté."
+                "35&nbsp;&deg;C et 50&nbsp;mm sont des choix : la France a presque "
+                "zéro jour au-dessus de 35&nbsp;&deg;C."
             ),
-            "limit6_b": "Trois pays.",
+            "limit6_b": "Trois pays seulement.",
             "limit6": (
-                "Le pipeline passe à l'échelle d'environ 3 700 régions, mais les "
-                "résultats sont un pilote, pas un résultat mondial."
+                "Les résultats viennent d'un pilote, pas d'une étude mondiale."
             ),
             "r_num": "06", "r_title": "lire le rapport complet",
             "r_text": (
-                "Le document complet ajoute la littérature, les tableaux de "
-                "régression, les diagnostics spatiaux, les onze cartes et les onze "
-                "figures. Les deux versions sont des fichiers autonomes."
+                "Le rapport complet contient la méthode détaillée, tous les tableaux, "
+                "les onze cartes et les six figures."
             ),
             "read_html_kicker": "html &middot; s'ouvre dans cet onglet",
             "read_html_title": "le rapport complet",
-            "read_pdf_kicker": "pdf &middot; mise en page imprimée",
+            "read_pdf_kicker": "pdf &middot; version imprimable",
             "read_pdf_title": "télécharger le pdf",
             "sources": (
-                "Tableaux derrière cette page : outputs/tables/t01&ndash;t09. Source "
-                "du rapport : outputs/report/report.fr.html et report.fr.pdf."
+                "Tableaux utilisés : outputs/tables/t01&ndash;t08. Rapport : "
+                "outputs/report/report.fr.html et report.fr.pdf."
             ),
             "aside_on_page": "sur cette page",
             "toc_1": "01 &middot; la question",
             "toc_2": "02 &middot; comment l'indice est construit",
-            "toc_3": "03 &middot; ce que nous avons trouvé",
+            "toc_3": "03 &middot; les résultats",
             "toc_4": "04 &middot; où se situe le risque",
-            "toc_5": "05 &middot; ce qui changerait la réponse",
+            "toc_5": "05 &middot; les limites",
             "toc_6": "06 &middot; lire le rapport complet",
             "aside_doc": "le document",
             "aside_html": "ouvrir report.html &rarr;",
@@ -368,7 +359,7 @@ def _copy(lang: str, values: dict) -> dict[str, str]:
             "aside_back": "retour au tableau de bord &rarr;",
             "footer_left": (
                 "observatoire du risque climatique &amp; du développement humain "
-                "&middot; édition pilote"
+                "&middot; projet pilote"
             ),
             "footer_link_dashboard": "tableau de bord",
             "footer_link_report": "rapport",
@@ -377,159 +368,149 @@ def _copy(lang: str, values: dict) -> dict[str, str]:
         c = {
             "lang": "en",
             "title": "Summary &middot; Climate Risk &amp; Human Development Observatory",
-            "eyebrow": "summary &amp; report &middot; pilot edition",
+            "eyebrow": "summary &amp; report &middot; pilot project",
             "scope": "france / india / united states",
-            "hero_title": "the summary<span>of the statistical report.</span>",
+            "hero_title": "the summary<span>of the report.</span>",
             "standfirst": (
-                "A two-minute read of the written report: the question, how the index "
-                "is built, the four findings, the tables behind them and the limits of "
-                "what they can say. Every number here is generated from the same "
-                "tables as the full document, so the two cannot disagree."
+                "The report in two minutes: the question, how the index is built, the "
+                "four results and their limits. Every number comes from the same "
+                "tables as the full report."
             ),
             "stat_regions": "admin-1 regions",
             "stat_people": "people covered",
-            "stat_concentration": "heat exposure concentration",
-            "stat_rho": "hazard-SHDI rank correlation",
+            "stat_rho": "hazard-SHDI correlation (all regions)",
+            "stat_within": "hazard effect inside countries",
             "q_num": "01", "q_title": "the question",
             "q_text1": (
-                "Do the places exposed to the most climate stress also have the "
-                "lowest human development? And if so, is that just a country effect, "
-                "or does it hold among regions inside the same country?"
+                "Are the regions with the most extreme climate also the regions with "
+                "the lowest human development? And is this still true when we compare "
+                "regions of the same country?"
             ),
             "q_text2": (
-                f"The pilot covers {v['n_regions']} admin-1 regions in France, India "
-                f"and the United States: {v['population_bn']} billion people. Climate "
-                "is measured from NASA POWER daily records (1991&ndash;2023), "
-                "population from the 2020 GHS-POP grid, and development from the "
-                "subnational Human Development Index (SHDI)."
+                f"The project covers {v['n_regions']} regions (states, provinces, "
+                f"regions) in France, India and the United States: "
+                f"{v['population_bn']} billion people. Climate data come from NASA "
+                "POWER (1991&ndash;2023), population from GHS-POP 2020 and "
+                "development from the Subnational Human Development Index (SHDI)."
             ),
             "m_num": "02", "m_title": "how the index is built",
             "card_hazard": "hazard",
             "card_hazard_text": (
                 "Six climate measures (days above 35&nbsp;&deg;C, tropical nights, "
-                "dry-spell length, water balance, heaviest rain, very wet days) are "
-                "turned into percentiles, then averaged into heat, dry and wet "
-                "sub-indices."
+                "longest dry spell, water balance, heaviest one-day rain, very wet "
+                "days). Each one becomes a rank from 0 to 1, then we average heat, "
+                "dry and wet."
             ),
             "card_exposure": "exposure",
             "card_exposure_text": (
-                "Population times heat days. Each person is assigned to the nearest "
-                "climate sample point, so a hot but empty region does not rank like a "
-                "hot and crowded one."
+                "The number of people living in the region, as a rank from 0 to 1. We "
+                "do not use heat here, because heat is already in the hazard score; "
+                "otherwise it would be counted twice."
             ),
             "card_vulnerability": "vulnerability",
             "card_vulnerability_text": (
-                "One minus the percentile rank of SHDI. Lower development means higher "
-                "vulnerability. Regions with no SHDI keep their hazard and exposure "
-                "scores but are left out of the development models."
+                "1 minus the rank of SHDI. Low development means high vulnerability. "
+                "The 6 regions without SHDI have no risk score."
             ),
             "card_risk": "risk",
             "card_risk_text": (
-                "The geometric mean of hazard, exposure and vulnerability (IPCC "
-                "framing). A region must score on all three to rank high. Additive and "
-                "PCA-weighted versions are kept as robustness checks."
+                "Hazard &times; exposure &times; vulnerability (IPCC idea). A region "
+                "must be high on all three to get a high risk. Two other versions "
+                "(simple mean, and risk without population) are used to check the "
+                "ranking."
             ),
             "method_source": (
-                "All ingredients are percentiles from 0 to 1, which is why the "
-                "composite risk index is also on a 0&ndash;1 scale."
+                "All scores are ranks between 0 and 1, so the risk is also between 0 "
+                "and 1."
             ),
-            "f_num": "03", "f_title": "what we found",
-            "find1_title": "Exposure is concentrated",
+            "f_num": "03", "f_title": "the results",
+            "find1_title": "More hazard, less development (H1)",
             "find1_body": (
-                "The top 10% most hazardous regions hold "
-                f"{v['ratio']} times their population share of person-days of extreme "
-                f"heat (95% CI {v['ci_low']} to {v['ci_high']}). Heat exposure is not "
-                "spread evenly across the pilot."
+                f"On all regions, the Spearman correlation between hazard and SHDI is "
+                f"{v['rho']} (p {v['p_value']}). Median SHDI is {v['median_high']} in "
+                f"the more hazardous half and {v['median_low']} in the other half. "
+                "But this gap comes mostly from the difference between India and the "
+                "two other countries."
             ),
-            "find2_title": "High hazard goes with lower development",
+            "find2_title": "Country by country, the link is weaker (H1)",
             "find2_body": (
-                f"Median SHDI is {v['median_high']} in high-hazard regions and "
-                f"{v['median_low']} in low-hazard regions (Mann&ndash;Whitney p "
-                f"{v['p_value']}, Cliff&rsquo;s &delta; {v['cliffs']}). The rank "
-                f"correlation is {v['rho']}."
+                f"The correlation is {v['rho_ind']} in India and {v['rho_usa']} in "
+                f"the United States. In France it is {v['rho_fra']} (p = "
+                f"{v['p_fra']}): no clear link, but France has only 13 regions and "
+                "small climate differences."
             ),
-            "find3_title": "It survives country fixed effects",
+            "find3_title": "The link stays negative inside countries (H2)",
             "find3_body": (
-                "A one standard deviation rise in hazard goes with "
-                f"{v['beta']} standard deviations of SHDI inside countries (95% CI "
-                f"{v['beta_low']} to {v['beta_high']}, N = {v['n_obs']}). The slope is "
-                f"{v['slope_ind']} in India and {v['slope_usa']} in the United States; "
-                f"in France it is {v['slope_fra']} because the hazard range is narrow."
+                f"In a linear regression, the hazard coefficient goes from "
+                f"{v['beta_all']} to {v['beta']} when we add a country effect (95% CI "
+                f"{v['beta_low']} to {v['beta_high']}, N = {v['n_obs']}). In simple "
+                f"words: +0.1 of hazard goes with {v['beta_tenth']} of SHDI, in the "
+                "same country."
             ),
-            "find4_title": "The pattern is spatially clustered",
+            "find4_title": "The ranking is stable (H3)",
             "find4_body": (
-                f"Moran&rsquo;s I is {v['moran_risk']} for composite risk, "
-                f"{v['moran_hazard']} for hazard and {v['moran_shdi']} for SHDI (all "
-                "p &le; 0.001): neighbouring regions resemble each other, so the map "
-                "is not noise. The exception is SHDI in France, where I = "
-                f"{v['moran_fra_shdi']} and the clustering is not significant."
+                f"Between the three versions of the index, the rank correlation is at "
+                f"least {v['min_rho']}, and at least {v['min_top10']} of the top 10 "
+                "regions are the same. Even without population, the big Indian "
+                "states stay at the top: it is not only a size effect."
             ),
-            "p_num": "04", "p_title": "where the risk sits",
+            "p_num": "04", "p_title": "where the risk is",
             "p_text": (
-                "All ten of the highest-risk regions are in India, and India accounts "
-                f"for {v['india_share']}% of all person-days of extreme heat in the "
-                "pilot. The ranking is a screening tool, not a verdict: it says where "
-                "to look first."
+                "All ten highest-risk regions are in India, because India is both "
+                "hotter and less developed. To see the differences inside France or "
+                "the United States, choose a country in the dashboard. The ranking "
+                "shows where to look first; it is not a verdict."
             ),
-            "l_num": "05", "l_title": "what would change the answer",
+            "l_num": "05", "l_title": "the limits",
             "limit1_b": "Association, not causation.",
             "limit1": (
-                "Climate, history, institutions and geography are entangled. The "
-                "models show a robust association; they do not identify a causal "
-                "effect."
+                "Climate, history and the economy are linked. The models show a link, "
+                "not a cause."
             ),
             "limit2_b": "Six regions have no SHDI.",
             "limit2": (
-                "Development tests use 99 of the 105 regions; hazard, exposure and "
-                "risk still cover all 105."
+                "The tests use 99 of the 105 regions; hazard still covers all 105."
             ),
-            "limit3_b": "Admin-1 boundaries are coarse.",
+            "limit3_b": "Neighbouring regions are similar.",
             "limit3": (
-                "A large region can hide a hot city, and a small one can look worse "
-                "than its surroundings."
+                "The observations are not fully independent, so the p-values are "
+                "probably too small. A spatial model would be the next step."
             ),
             "limit4_b": "One development indicator.",
-            "limit4": (
-                "SHDI does not capture inequality inside a region, which is often the "
-                "part that matters for adaptation."
-            ),
-            "limit5_b": "Historical climate only.",
+            "limit4": "SHDI does not show inequality inside a region.",
+            "limit5_b": "Fixed thresholds.",
             "limit5": (
-                "The index describes 1991&ndash;2023, not future scenarios. A CMIP6 "
-                "appendix is deliberately left out."
+                "35&nbsp;&deg;C and 50&nbsp;mm are choices: France has almost zero "
+                "days above 35&nbsp;&deg;C."
             ),
-            "limit6_b": "Three countries.",
-            "limit6": (
-                "The pipeline scales to roughly 3,700 regions, but the findings are a "
-                "pilot, not a global result."
-            ),
+            "limit6_b": "Only three countries.",
+            "limit6": "The results come from a pilot, not a world study.",
             "r_num": "06", "r_title": "read the full report",
             "r_text": (
-                "The complete document adds the literature, the regression tables, the "
-                "spatial diagnostics, all eleven maps and the eleven figures. Both "
-                "versions are self-contained files."
+                "The full report has the detailed method, all the tables, the eleven "
+                "maps and the six figures."
             ),
             "read_html_kicker": "html &middot; opens in this tab",
             "read_html_title": "the full report",
-            "read_pdf_kicker": "pdf &middot; print layout",
+            "read_pdf_kicker": "pdf &middot; print version",
             "read_pdf_title": "download the pdf",
             "sources": (
-                "Tables behind this page: outputs/tables/t01&ndash;t09. Report source: "
+                "Tables used: outputs/tables/t01&ndash;t08. Report: "
                 "outputs/report/report.html and report.pdf."
             ),
             "aside_on_page": "on this page",
             "toc_1": "01 &middot; the question",
             "toc_2": "02 &middot; how the index is built",
-            "toc_3": "03 &middot; what we found",
-            "toc_4": "04 &middot; where the risk sits",
-            "toc_5": "05 &middot; what would change the answer",
+            "toc_3": "03 &middot; the results",
+            "toc_4": "04 &middot; where the risk is",
+            "toc_5": "05 &middot; the limits",
             "toc_6": "06 &middot; read the full report",
             "aside_doc": "the document",
             "aside_html": "open report.html &rarr;",
             "aside_pdf": "report.pdf &darr;",
             "aside_back": "back to the dashboard &rarr;",
             "footer_left": (
-                "climate risk &amp; human development observatory &middot; pilot edition"
+                "climate risk &amp; human development observatory &middot; pilot project"
             ),
             "footer_link_dashboard": "dashboard",
             "footer_link_report": "report",
@@ -552,22 +533,15 @@ def build_summary_html(
     summary = pd.read_csv(tables_dir / "t01_summary_by_country.csv").set_index("group")
     top = pd.read_csv(tables_dir / "t03_top_bottom_regions.csv")
     top = top[top["group"] == "highest_risk"].sort_values("rank_equal").head(10)
-    tests = pd.read_csv(tables_dir / "t05_hypothesis_tests.csv")
-    regression = pd.read_csv(tables_dir / "t07_regression_coefficients.csv")
+    tests = pd.read_csv(tables_dir / "t05_hypothesis_tests.csv").set_index("group")
+    regression = pd.read_csv(tables_dir / "t07_regression_coefficients.csv").set_index("model")
     slopes = pd.read_csv(tables_dir / "t08_country_slopes.csv").set_index("iso3")
-    moran = pd.read_csv(tables_dir / "t09_morans_i.csv")
+    stability = pd.read_csv(tables_dir / "t06_rank_stability.csv")
 
-    h1 = tests.iloc[0]
-    h2 = tests.iloc[1]
-    within = regression[
-        (regression["model"] == "M3 country FE")
-        & (regression["term"] == "hazard_equal_z")
-    ].iloc[0]
-    national = moran[moran["scope"] == "all countries"].set_index("variable")
-
+    h1 = tests.loc["ALL"]
+    pooled = regression.loc["M1 all regions"]
+    within = regression.loc["M2 country effects"]
     all_row = summary.loc["ALL"]
-    india_heat = float(summary.loc["IND", "person_days_heat_bn"])
-    india_share = 100 * india_heat / float(all_row["person_days_heat_bn"])
 
     report_html, report_pdf = REPORT_FILES[lang]
     report_exists = (report_dir / report_html).exists()
@@ -579,29 +553,25 @@ def build_summary_html(
     values = {
         "n_regions": f"{int(all_row['n_regions'])}",
         "population_bn": _num(all_row["population_m"] / 1000, 2, lang),
-        "ratio": _num(h1["concentration_ratio"], 2, lang),
-        "ci_low": _num(h1["ci_low"], 2, lang),
-        "ci_high": _num(h1["ci_high"], 2, lang),
-        "median_high": _num(h2["median_shdi_high_hazard"], 3, lang),
-        "median_low": _num(h2["median_shdi_low_hazard"], 3, lang),
-        "p_value": _p(h2["p_value"], lang),
-        "cliffs": _num(h2["cliffs_delta"], 2, lang),
-        "rho": _num(h2["spearman_rho"], 2, lang),
+        "median_high": _num(h1["median_shdi_high_hazard"], 3, lang),
+        "median_low": _num(h1["median_shdi_low_hazard"], 3, lang),
+        "p_value": _p(h1["p_value"], lang),
+        "rho": _num(h1["spearman_rho"], 2, lang),
+        "n_obs": f"{int(within['n_obs'])}",
+        "rho_ind": _num(tests.loc["IND", "spearman_rho"], 2, lang),
+        "rho_usa": _num(tests.loc["USA", "spearman_rho"], 2, lang),
+        "rho_fra": _num(tests.loc["FRA", "spearman_rho"], 2, lang),
+        "p_fra": _num(tests.loc["FRA", "p_value"], 2, lang),
+        "beta_all": _num(pooled["beta"], 2, lang),
         "beta": _num(within["beta"], 2, lang),
         "beta_low": _num(within["ci_low"], 2, lang),
         "beta_high": _num(within["ci_high"], 2, lang),
-        "n_obs": f"{int(within['n_obs'])}",
+        "beta_tenth": _num(within["beta"] / 10, 3, lang),
         "slope_ind": _num(slopes.loc["IND", "slope"], 2, lang),
         "slope_usa": _num(slopes.loc["USA", "slope"], 2, lang),
         "slope_fra": _num(slopes.loc["FRA", "slope"], 2, lang),
-        "moran_risk": _num(national.loc["risk_equal", "morans_i"], 2, lang),
-        "moran_hazard": _num(national.loc["hazard_equal", "morans_i"], 2, lang),
-        "moran_shdi": _num(national.loc["shdi", "morans_i"], 2, lang),
-        "moran_fra_shdi": _num(
-            moran[(moran["scope"] == "FRA") & (moran["variable"] == "shdi")].iloc[0]["morans_i"],
-            2, lang,
-        ),
-        "india_share": _num(india_share, 0, lang),
+        "min_rho": _num(stability["spearman_rho"].min(), 2, lang),
+        "min_top10": f"{int(stability['same_in_top10'].min())}",
     }
     c = _copy(lang, values)
 
@@ -609,8 +579,8 @@ def build_summary_html(
     stats = "".join([
         _stat(values["n_regions"], c["stat_regions"]),
         _stat(f'{values["population_bn"]}{" Md" if lang == "fr" else "bn"}', c["stat_people"]),
-        _stat(f'{values["ratio"]}&times;', c["stat_concentration"]),
         _stat(values["rho"], c["stat_rho"]),
+        _stat(values["beta"], c["stat_within"]),
     ])
 
     # Ticker: two identical segments so the CSS loop is seamless. ----------
@@ -621,8 +591,8 @@ def build_summary_html(
         f'<span><b>{len(COUNTRIES)}</b> {"pays" if lang == "fr" else "countries"}</span>'
         f'<span><b>{values["population_bn"]}{" Md" if lang == "fr" else "bn"}</b> '
         f'{"personnes" if lang == "fr" else "people"}</span>'
-        f'<span><b>{values["ratio"]}&times;</b> '
-        f'{"concentration" if lang == "fr" else "concentration"}</span>'
+        f'<span><b>{values["beta"]}</b> '
+        f'{"effet dans les pays" if lang == "fr" else "effect inside countries"}</span>'
         f'<span><b>{values["rho"]}</b> '
         f'{"corrélation de rang" if lang == "fr" else "rank correlation"}</span>'
         "</div>"
@@ -646,22 +616,13 @@ def _page(
         return _finding(value, title, body)
 
     findings = "".join([
-        finding(f'{values["ratio"]}&times;', c["find1_title"], c["find1_body"]),
+        finding(values["rho"], c["find1_title"], c["find1_body"]),
         finding(
-            f'{values["median_high"]} <span class="r-vs">{"vs" if c["lang"] == "en" else "contre"}</span> '
-            f'{values["median_low"]}',
+            f'{values["rho_ind"]} / {values["rho_usa"]} / {values["rho_fra"]}',
             c["find2_title"], c["find2_body"],
         ),
-        finding(
-            values["beta"],
-            c["find3_title"],
-            c["find3_body"],
-        ),
-        finding(
-            values["moran_risk"],
-            c["find4_title"],
-            c["find4_body"],
-        ),
+        finding(values["beta"], c["find3_title"], c["find3_body"]),
+        finding(f'{values["min_top10"]}/10', c["find4_title"], c["find4_body"]),
     ])
 
     limit_items = "".join(

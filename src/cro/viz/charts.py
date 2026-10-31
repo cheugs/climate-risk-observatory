@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
-from statsmodels.nonparametric.smoothers_lowess import lowess
 
 from cro.viz import theme
 
@@ -21,10 +20,11 @@ COUNTRY_NAMES = {"FRA": "France", "IND": "India", "USA": "United States"}
 
 
 def scatter_hazard_development(master: pd.DataFrame, path: Path) -> None:
-    """Hazard against development, with a LOWESS curve.
+    """Hazard against development, with one straight line per country.
 
-    LOWESS is a smooth line fitted to the cloud of points. It shows the
-    shape of the relationship without assuming it is a straight line.
+    One line for all regions would mostly connect the India group to the
+    France/USA group. One line per country shows the link *inside* each
+    country, which is the fair comparison (hypothesis H2).
     """
     theme.apply_style()
     data = master.dropna(subset=["hazard_equal", "shdi"])
@@ -32,13 +32,15 @@ def scatter_hazard_development(master: pd.DataFrame, path: Path) -> None:
     fig, ax = plt.subplots(figsize=(8.5, 6))
 
     for iso3, group in data.groupby("iso3"):
+        color = theme.COUNTRY_COLORS[iso3]
         ax.scatter(group["hazard_equal"], group["shdi"], s=38, alpha=0.75,
-                   color=theme.COUNTRY_COLORS[iso3], edgecolor="white",
-                   linewidth=0.6, label=COUNTRY_NAMES[iso3], zorder=3)
+                   color=color, edgecolor="white", linewidth=0.6,
+                   label=COUNTRY_NAMES[iso3], zorder=3)
 
-    smooth = lowess(data["shdi"], data["hazard_equal"], frac=0.6)
-    ax.plot(smooth[:, 0], smooth[:, 1], color=theme.COLORS["ink"],
-            linewidth=2.2, zorder=4, label="LOWESS (all regions)")
+        # Least-squares line for this country only.
+        slope, intercept = np.polyfit(group["hazard_equal"], group["shdi"], 1)
+        x = np.linspace(group["hazard_equal"].min(), group["hazard_equal"].max(), 50)
+        ax.plot(x, intercept + slope * x, color=color, linewidth=2.2, zorder=4)
 
     # Label the most extreme cases so the chart has a story.
     for _, row in data.nlargest(3, "hazard_equal").iterrows():
@@ -48,32 +50,37 @@ def scatter_hazard_development(master: pd.DataFrame, path: Path) -> None:
 
     ax.set_xlabel("Climate hazard index (0-1)")
     ax.set_ylabel("Subnational HDI")
-    ax.set_title("Higher climate hazard goes with lower development")
+    ax.set_title("The big gap is between countries; inside countries it is smaller")
     ax.legend(loc="lower left", fontsize=8)
 
-    theme.save_figure(fig, path, note="Each dot is an admin-1 region. Association, not causation.")
+    theme.save_figure(fig, path, note="Each dot is an admin-1 region. One line per country. "
+                                      "Association, not causation.")
 
 
-def lorenz_curve(lorenz: pd.DataFrame, path: Path) -> None:
-    """Cumulative share of exposure against cumulative share of population."""
+def top_regions_bar(master: pd.DataFrame, path: Path, n: int = 5) -> None:
+    """The regions with the highest risk inside each country.
+
+    On a shared scale, the whole top 15 is Indian. Showing the top regions
+    of each country tells the reader where to look inside France and the USA.
+    """
     theme.apply_style()
-    data = lorenz.sort_values("rank_hazard")
+    parts = [group.nlargest(n, "risk_equal") for _, group in master.groupby("iso3")]
+    data = pd.concat(parts).iloc[::-1]
 
-    fig, ax = plt.subplots(figsize=(6.5, 6))
-    ax.plot(data["cum_pop_share"], data["cum_person_days_share"],
-            color=theme.COLORS["accent"], linewidth=2.4, label="Actual concentration")
-    ax.plot([0, 1], [0, 1], linestyle="--", color=theme.COLORS["muted"],
-            linewidth=1.2, label="Perfect equality")
+    fig, ax = plt.subplots(figsize=(7.5, 6))
+    ax.barh(data["region_name"], data["risk_equal"],
+            color=[theme.COUNTRY_COLORS[iso3] for iso3 in data["iso3"]])
+    for y, value in enumerate(data["risk_equal"]):
+        ax.text(value + 0.01, y, f"{value:.2f}", va="center", fontsize=8,
+                color=theme.COLORS["muted"])
+    ax.set_xlabel("Risk index (0-1, same scale for all countries)")
+    ax.set_title(f"The {n} highest-risk regions in each country")
+    ax.grid(axis="y", visible=False)
 
-    ax.fill_between(data["cum_pop_share"], data["cum_person_days_share"],
-                    data["cum_pop_share"], color=theme.COLORS["accent"], alpha=0.08)
-
-    ax.set_xlabel("Cumulative share of population (regions sorted by hazard, highest first)")
-    ax.set_ylabel("Cumulative share of person-days of extreme heat")
-    ax.set_title("Exposure is concentrated in a minority of regions")
-    ax.legend(loc="upper left", fontsize=8)
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
+    handles = [Line2D([0], [0], marker="s", linestyle="", markersize=9,
+                      color=theme.COUNTRY_COLORS[iso3], label=name)
+               for iso3, name in COUNTRY_NAMES.items()]
+    ax.legend(handles=handles, loc="lower right", fontsize=8)
 
     theme.save_figure(fig, path)
 
@@ -95,21 +102,19 @@ def forest_plot(slopes: pd.DataFrame, path: Path) -> None:
     ax.set_yticks(y_positions)
     ax.set_yticklabels([f"{COUNTRY_NAMES.get(iso, iso)} (n={n})"
                         for iso, n in zip(data["iso3"], data["n_regions"])])
-    ax.set_xlabel("Standardised slope: SHDI on hazard")
+    ax.set_xlabel("Slope of SHDI on hazard (change from lowest to highest hazard)")
     ax.set_title("The gap inside each country")
     ax.grid(axis="y", visible=False)
 
-    theme.save_figure(fig, path, note="Bars are 95% confidence intervals (HC3 robust standard errors).")
+    theme.save_figure(fig, path, note="Bars are 95% confidence intervals.")
 
 
 def coefficient_plot(coefficients: pd.DataFrame, path: Path) -> None:
-    """Compare the hazard coefficient across the four models."""
+    """Compare the hazard coefficient with and without country effects."""
     theme.apply_style()
-    data = coefficients[coefficients["term"] == "hazard_equal_z"].copy()
-    order = ["M1 pooled", "M2 controls", "M3 country FE"]
-    data = data[data["model"].isin(order)].set_index("model").loc[order].reset_index()
+    data = coefficients[coefficients["term"] == "hazard_equal"].reset_index(drop=True)
 
-    fig, ax = plt.subplots(figsize=(7.5, 4))
+    fig, ax = plt.subplots(figsize=(7.5, 2.8))
     y = np.arange(len(data))
     ax.errorbar(data["beta"], y,
                 xerr=[data["beta"] - data["ci_low"], data["ci_high"] - data["beta"]],
@@ -118,8 +123,9 @@ def coefficient_plot(coefficients: pd.DataFrame, path: Path) -> None:
     ax.axvline(0, color=theme.COLORS["muted"], linestyle="--", linewidth=1)
     ax.set_yticks(y)
     ax.set_yticklabels(data["model"])
-    ax.set_xlabel("Standardised hazard coefficient (SHDI outcome)")
-    ax.set_title("Country fixed effects shrink but do not remove the gap")
+    ax.set_ylim(-0.7, len(data) - 0.3)
+    ax.set_xlabel("Hazard coefficient (change in SHDI)")
+    ax.set_title("Country effects make the link smaller, but it stays negative")
     ax.grid(axis="y", visible=False)
 
     theme.save_figure(fig, path, note="Bars are 95% confidence intervals.")
@@ -162,7 +168,7 @@ def distribution_panels(master: pd.DataFrame, path: Path) -> None:
     variables = [
         ("hd35_area", "Heat days per year"),
         ("hazard_equal", "Hazard index"),
-        ("exposure_score", "Exposure score"),
+        ("exposure_score", "Exposure score (population rank)"),
         ("shdi", "Subnational HDI"),
     ]
 
@@ -201,8 +207,8 @@ def plot_all(master: pd.DataFrame, tables: dict, figures_dir: Path) -> list[Path
     distribution_panels(master, figures_dir / "fig_02_distributions.png")
     outputs.append(figures_dir / "fig_02_distributions.png")
 
-    lorenz_curve(tables["lorenz"], figures_dir / "fig_03_lorenz.png")
-    outputs.append(figures_dir / "fig_03_lorenz.png")
+    top_regions_bar(master, figures_dir / "fig_03_top_regions.png")
+    outputs.append(figures_dir / "fig_03_top_regions.png")
 
     coefficient_plot(tables["coefficients"], figures_dir / "fig_04_coefficients.png")
     outputs.append(figures_dir / "fig_04_coefficients.png")

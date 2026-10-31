@@ -1,8 +1,7 @@
 """Run the whole analysis in the right order and write a short summary.
 
-The summary file is useful for two reasons:
-1. it is a quick check that every step produced sensible numbers, and
-2. it gives the report a first draft of the findings.
+The summary file (key_numbers.json) is read by the report and the
+dashboard, so the numbers are never typed by hand.
 """
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ import pandas as pd
 
 from cro.config import load_config
 from cro.utils import log
-from cro.analysis import descriptives, regression, spatial, tests
+from cro.analysis import descriptives, regression, tests
 
 
 def run() -> dict:
@@ -23,38 +22,50 @@ def run() -> dict:
     outputs = Path(cfg["paths"]["outputs"])
 
     log("analysis: descriptives")
-    desc = descriptives.run()
+    descriptives.run()
 
-    log("analysis: hypothesis tests")
+    log("analysis: hypothesis tests (H1, H3)")
     tested = tests.run()
 
-    log("analysis: regression")
+    log("analysis: regression (H2)")
     coefficients = regression.run()
 
-    log("analysis: spatial")
-    moran = spatial.run()
-
     master = pd.read_parquet(processed / "region_master.parquet")
-    h1 = tested["tests"].iloc[0]
-    h2 = tested["tests"].iloc[1]
+    h1 = tested["h1"].set_index("group")
+    stability = tested["stability"]
+    slopes = pd.read_parquet(processed / "country_slopes.parquet").set_index("iso3")
+
+    def model(name: str) -> dict:
+        row = coefficients[coefficients["model"] == name].iloc[0]
+        return {
+            "beta": round(float(row["beta"]), 3),
+            "ci": [round(float(row["ci_low"]), 3), round(float(row["ci_high"]), 3)],
+            "p_value": float(f"{row['p_value']:.3g}"),
+            "n": int(row["n_obs"]),
+        }
 
     key = {
         "n_regions": int(len(master)),
         "n_countries": int(master["iso3"].nunique()),
         "population_millions": round(master["population"].sum() / 1e6, 1),
         "regions_with_development": int(master["shdi"].notna().sum()),
-        "h1_concentration_ratio": round(float(h1["concentration_ratio"]), 2),
-        "h1_ci": [round(float(h1["ci_low"]), 2), round(float(h1["ci_high"]), 2)],
-        "h2_median_shdi_high_hazard": round(float(h2["median_shdi_high_hazard"]), 3),
-        "h2_median_shdi_low_hazard": round(float(h2["median_shdi_low_hazard"]), 3),
-        "h2_p_value": float(f"{h2['p_value']:.3g}"),
-        "h2_cliffs_delta": round(float(h2["cliffs_delta"]), 3),
-        "h3_country_fe_beta": _country_fe_beta(coefficients),
-        "moran_i": {
-            f"{row['scope']}:{row['variable']}": round(float(row["morans_i"]), 3)
-            for _, row in moran[moran["scope"] != "all countries"].iterrows()
-            if pd.notna(row["morans_i"])
+        "h1": {
+            group: {
+                "rho": round(float(row["spearman_rho"]), 2),
+                "p_value": float(f"{row['p_value']:.3g}"),
+                "n": int(row["n_regions"]),
+                "median_shdi_high_hazard": round(float(row["median_shdi_high_hazard"]), 3),
+                "median_shdi_low_hazard": round(float(row["median_shdi_low_hazard"]), 3),
+            }
+            for group, row in h1.iterrows()
         },
+        "h2_all_regions": model("M1 all regions"),
+        "h2_country_effects": model("M2 country effects"),
+        "h2_country_slopes": {
+            iso3: round(float(row["slope"]), 3) for iso3, row in slopes.iterrows()
+        },
+        "h3_min_rho": round(float(stability["spearman_rho"].min()), 2),
+        "h3_min_same_in_top10": int(stability["same_in_top10"].min()),
     }
 
     with open(processed / "key_numbers.json", "w", encoding="utf-8") as f:
@@ -65,29 +76,10 @@ def run() -> dict:
     return key
 
 
-def _country_fe_beta(coefficients: pd.DataFrame) -> dict | None:
-    """Pull the hazard coefficient from the country fixed-effects model."""
-    row = coefficients[
-        (coefficients["model"] == "M3 country FE")
-        & (coefficients["term"] == "hazard_equal_z")
-    ]
-    if row.empty:
-        return None
-    row = row.iloc[0]
-    return {
-        "beta": round(float(row["beta"]), 3),
-        "ci": [round(float(row["ci_low"]), 3), round(float(row["ci_high"]), 3)],
-        "p_value": float(f"{row['p_value']:.3g}"),
-        "n": int(row["n_obs"]),
-    }
-
-
 def _write_summary(key: dict, master: pd.DataFrame, outputs: Path) -> None:
-    """Write a plain-language summary of the results."""
-    top = master.nlargest(10, "risk_equal")[
-        ["region_name", "country", "risk_equal"]
-    ]
-
+    """Write the main results as a short Markdown file."""
+    h1 = key["h1"]["ALL"]
+    m1, m2 = key["h2_all_regions"], key["h2_country_effects"]
     lines = [
         "# Key results",
         "",
@@ -95,49 +87,43 @@ def _write_summary(key: dict, master: pd.DataFrame, outputs: Path) -> None:
         f"- Population covered: **{key['population_millions']:.1f} million**.",
         f"- Regions with development data: **{key['regions_with_development']}**.",
         "",
-        "## H1 - exposure is concentrated",
-        f"- The top 10% most hazardous regions hold **{key['h1_concentration_ratio']:.2f}x** "
-        f"their population share of person-days of extreme heat "
-        f"(95% CI {key['h1_ci'][0]:.2f} to {key['h1_ci'][1]:.2f}).",
-        "",
-        "## H2 - high hazard goes with lower development",
-        f"- Median SHDI in high-hazard regions: **{key['h2_median_shdi_high_hazard']:.3f}**.",
-        f"- Median SHDI in low-hazard regions: **{key['h2_median_shdi_low_hazard']:.3f}**.",
-        f"- Mann-Whitney p = **{key['h2_p_value']:.3g}**, Cliff's delta = **{key['h2_cliffs_delta']:.2f}**.",
-        "",
-        "## H3 - does it survive country fixed effects?",
+        "## H1 - more hazard goes with lower development",
+        f"- All regions: Spearman rho = **{h1['rho']:.2f}** (p = {h1['p_value']:.2g}, "
+        f"N = {h1['n']}).",
+        f"- Median SHDI: **{h1['median_shdi_high_hazard']:.3f}** in the more hazardous half, "
+        f"**{h1['median_shdi_low_hazard']:.3f}** in the less hazardous half.",
     ]
-
-    if key["h3_country_fe_beta"]:
-        beta = key["h3_country_fe_beta"]
-        lines.append(
-            f"- A one standard deviation increase in hazard is associated with "
-            f"**{beta['beta']:.2f}** standard deviations of SHDI "
-            f"(95% CI {beta['ci'][0]:.2f} to {beta['ci'][1]:.2f}, p = {beta['p_value']:.3g}, "
-            f"N = {beta['n']}) within countries."
-        )
-    else:
-        lines.append("- Model could not be estimated.")
+    for iso3 in ["FRA", "IND", "USA"]:
+        if iso3 in key["h1"]:
+            row = key["h1"][iso3]
+            lines.append(f"- {iso3}: rho = {row['rho']:.2f} (p = {row['p_value']:.2g}, N = {row['n']}).")
 
     lines += [
         "",
-        "## H4 - spatial clustering",
-    ]
-    for variable, value in key["moran_i"].items():
-        lines.append(f"- Moran's I for `{variable}`: **{value:.2f}**.")
-
-    lines += ["", "## Highest-risk regions", ""]
-    for _, row in top.iterrows():
-        lines.append(f"1. {row['region_name']} ({row['country']}) - risk {row['risk_equal']:.3f}")
-
-    lines += [
+        "## H2 - is it still true inside countries?",
+        f"- Without country effects: coefficient **{m1['beta']:.2f}** "
+        f"(95% CI {m1['ci'][0]:.2f} to {m1['ci'][1]:.2f}).",
+        f"- With country effects: coefficient **{m2['beta']:.2f}** "
+        f"(95% CI {m2['ci'][0]:.2f} to {m2['ci'][1]:.2f}, N = {m2['n']}).",
+        "- The coefficient is the change in SHDI from the least to the most hazardous region.",
         "",
-        "> These are associations, not causal effects. See the limitations section.",
+        "## H3 - is the ranking stable?",
+        f"- Lowest Spearman correlation between two index versions: **{key['h3_min_rho']:.2f}**.",
+        f"- At least **{key['h3_min_same_in_top10']}** of the top 10 regions are the same "
+        "in every pair of versions.",
+        "",
+        "## Highest-risk regions",
+        "",
     ]
+    top = master.nlargest(10, "risk_equal")
+    for i, (_, row) in enumerate(top.iterrows(), start=1):
+        lines.append(f"{i}. {row['region_name']} ({row['country']}) - risk {row['risk_equal']:.3f}")
+
+    lines += ["", "> These are associations, not causal effects. See the limitations section."]
 
     path = outputs / "report" / "key_results.md"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines), encoding="utf-8")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

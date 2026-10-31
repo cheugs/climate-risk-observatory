@@ -149,7 +149,8 @@ def check_scores_bounded() -> Result:
     """Indices must stay between 0 and 1."""
     master = _load("region_master.parquet")
     columns = ["hazard_heat", "hazard_dry", "hazard_wet", "hazard_equal",
-               "exposure_score", "vulnerability", "risk_equal", "risk_additive"]
+               "exposure_score", "vulnerability", "risk_equal", "risk_additive",
+               "risk_per_person"]
 
     problems = []
     for column in columns:
@@ -201,10 +202,9 @@ def check_tables_written() -> Result:
 
     expected = [
         "t01_summary_by_country.csv", "t02_climate_by_country.csv",
-        "t03_top_bottom_regions.csv", "t04_exposure_concentration.csv",
-        "t05_hypothesis_tests.csv", "t06_rank_stability.csv",
-        "t07_regression_coefficients.csv", "t08_country_slopes.csv",
-        "t09_morans_i.csv",
+        "t03_top_bottom_regions.csv", "t05_hypothesis_tests.csv",
+        "t06_rank_stability.csv", "t07_regression_coefficients.csv",
+        "t08_country_slopes.csv",
     ]
 
     missing = [name for name in expected if not (tables / name).exists()]

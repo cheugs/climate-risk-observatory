@@ -24,7 +24,6 @@ import plotly.graph_objects as go
 from dash import ALL, Input, Output, State, ctx, dash, dcc, html
 from dash.exceptions import PreventUpdate
 from flask import request
-from statsmodels.nonparametric.smoothers_lowess import lowess
 
 from cro.app.i18n import COOKIE_NAME, LANGS
 from cro.app.i18n import compact as compact_number
@@ -177,7 +176,7 @@ INDICATORS = {
         "colors": WARM_COLORS,
         "ascending": False,
     },
-    "person_days_heat": {
+    "population": {
         "key": "exposure",
         "fmt": "{:,.0f}",
         "colors": WARM_COLORS,
@@ -202,7 +201,7 @@ MEASURE_CHOICES = [
     ("risk_equal", "risk"),
     ("hazard_equal", "hazard"),
     ("hd35_area", "heat"),
-    ("person_days_heat", "exposure"),
+    ("population", "exposure"),
     ("vulnerability", "vulnerability"),
     ("shdi", "shdi"),
 ]
@@ -229,6 +228,70 @@ RHO_TEXT = f"{RHO:.2f}".replace("-", "\u2212")
 TOP_REGION = DATA.sort_values("risk_equal", ascending=False).iloc[0]["region_id"]
 
 
+def _load_results() -> dict:
+    """Key results from the analysis tables (H1, H2, H3).
+
+    The dashboard reads them from outputs/tables so the numbers on screen
+    are always the ones in the report. If a table is missing, the values
+    are empty and the text shows "n/a".
+    """
+    from cro.app.summary import TABLES_DIR as tables
+
+    try:
+        h1 = pd.read_csv(tables / "t05_hypothesis_tests.csv").set_index("group")
+        models = pd.read_csv(tables / "t07_regression_coefficients.csv").set_index("model")
+        stability = pd.read_csv(tables / "t06_rank_stability.csv")
+    except (FileNotFoundError, KeyError) as error:
+        log(f"dashboard: result tables not found ({error})")
+        return {}
+    within = models.loc["M2 country effects"]
+    return {
+        "median_high": h1.loc["ALL", "median_shdi_high_hazard"],
+        "median_low": h1.loc["ALL", "median_shdi_low_hazard"],
+        "p_value": h1.loc["ALL", "p_value"],
+        "rho_ind": h1.loc["IND", "spearman_rho"],
+        "rho_usa": h1.loc["USA", "spearman_rho"],
+        "rho_fra": h1.loc["FRA", "spearman_rho"],
+        "beta_all": models.loc["M1 all regions", "beta"],
+        "beta": within["beta"],
+        "beta_low": within["ci_low"],
+        "beta_high": within["ci_high"],
+        "min_rho": stability["spearman_rho"].min(),
+        "min_top10": stability["same_in_top10"].min(),
+    }
+
+
+RESULTS = _load_results()
+
+
+def _p_text(p_value: float, lang: str) -> str:
+    """'p < 0.001' for very small values, else 'p = 0.012'."""
+    text = "p < 0.001" if p_value < 0.001 else f"p = {p_value:.3f}"
+    return text.replace(".", ",") if lang == "fr" else text
+
+
+def result_text(key: str, lang: str) -> str:
+    """A finding sentence with the numbers from the analysis tables."""
+    if not RESULTS:
+        return t("misc.na", lang)
+    r = RESULTS
+    return tf(
+        key, lang,
+        median_high=num(r["median_high"], 3, lang),
+        median_low=num(r["median_low"], 3, lang),
+        p_value=_p_text(r["p_value"], lang),
+        rho_ind=num(r["rho_ind"], 2, lang),
+        rho_usa=num(r["rho_usa"], 2, lang),
+        rho_fra=num(r["rho_fra"], 2, lang),
+        beta_all=num(r["beta_all"], 2, lang),
+        beta=num(r["beta"], 2, lang),
+        beta_low=num(r["beta_low"], 2, lang),
+        beta_high=num(r["beta_high"], 2, lang),
+        min_rho=num(r["min_rho"], 2, lang),
+        min_top10=int(r["min_top10"]),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Small formatting helpers
 # ---------------------------------------------------------------------------
@@ -243,7 +306,7 @@ def fmt_value(indicator: str, value, lang: str | None = None) -> str:
     lang = _lang(lang)
     if pd.isna(value):
         return t("misc.na", lang)
-    if indicator == "person_days_heat":
+    if indicator == "population":
         return compact(value, lang)
     text = INDICATORS[indicator]["fmt"].format(float(value))
     if lang == "fr":
@@ -530,16 +593,22 @@ def build_scatter(
         ))
 
 
-    # Smooth trend line through all visible regions.
-    if len(data) > 8:
-        smooth = lowess(data["shdi"], data["hazard_equal"], frac=0.7)
+    # One straight trend line per country (least squares). A single line
+    # through all regions would mostly join India to the two other countries.
+    for iso3 in COUNTRY_CODES:
+        group = data[data["iso3"] == iso3]
+        if len(group) < 5:
+            continue
+        slope, intercept = np.polyfit(group["hazard_equal"], group["shdi"], 1)
+        x = np.linspace(group["hazard_equal"].min(), group["hazard_equal"].max(), 20)
         figure.add_trace(go.Scatter(
-            x=smooth[:, 0],
-            y=smooth[:, 1],
+            x=x,
+            y=intercept + slope * x,
             mode="lines",
             name=t("relation.trend", lang),
-            line={"color": DARK, "width": 1.6},
+            line={"color": COUNTRY_COLORS[iso3], "width": 2},
             hoverinfo="skip",
+            showlegend=False,
         ))
 
     # Study medians as thin dashed guides.
@@ -644,7 +713,7 @@ def build_profile_chart(region_id: str | None, lang: str | None = None) -> go.Fi
         (t("metric.risk", lang), "risk_equal"),
         (t("metric.vulnerability", lang), "vulnerability"),
         (t("metric.hazard", lang), "hazard_equal"),
-        (t("metric.exposure", lang), "person_days_heat"),
+        (t("metric.exposure", lang), "population"),
         (t("metric.heat", lang), "hd35_area"),
         (t("metric.shdi", lang), "shdi"),
     ]
@@ -657,7 +726,7 @@ def build_profile_chart(region_id: str | None, lang: str | None = None) -> go.Fi
         pct = percentile(values, row[column])
         position.append(0 if pct is None else pct)
         hover.append([
-            fmt_value(column, row[column], lang) if column != "person_days_heat" else compact(row[column], lang),
+            fmt_value(column, row[column], lang) if column != "population" else compact(row[column], lang),
             t("misc.na", lang) if pct is None else tf("profile.percentile", lang, value=f"{pct:.0f}"),
         ])
 
@@ -666,7 +735,7 @@ def build_profile_chart(region_id: str | None, lang: str | None = None) -> go.Fi
         country_position.append(0 if cpct is None else cpct)
         country_hover.append([
             t("misc.na", lang) if pd.isna(median) else (
-                compact(median, lang) if column == "person_days_heat"
+                compact(median, lang) if column == "population"
                 else fmt_value(column, median, lang)
             ),
             t("misc.na", lang) if cpct is None else tf("profile.percentile", lang, value=f"{cpct:.0f}"),
@@ -1118,19 +1187,19 @@ def layout(lang: str | None = None) -> html.Div:
                         html.Ul([
                             html.Li([
                                 html.B(t("relation.medians", lang)),
-                                html.Span(t("relation.medians_text", lang)),
+                                html.Span(result_text("relation.medians_text", lang)),
                             ]),
                             html.Li([
                                 html.B(t("relation.within", lang)),
-                                html.Span(t("relation.within_text", lang)),
+                                html.Span(result_text("relation.within_text", lang)),
                             ]),
                             html.Li([
                                 html.B(t("relation.by_country", lang)),
-                                html.Span(t("relation.by_country_text", lang)),
+                                html.Span(result_text("relation.by_country_text", lang)),
                             ]),
                             html.Li([
-                                html.B(t("relation.concentration", lang)),
-                                html.Span(t("relation.concentration_text", lang)),
+                                html.B(t("relation.stability", lang)),
+                                html.Span(result_text("relation.stability_text", lang)),
                             ]),
                         ], className="finding-list"),
                     ], className="finding"),

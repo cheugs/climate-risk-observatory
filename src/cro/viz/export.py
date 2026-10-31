@@ -14,7 +14,7 @@ import pandas as pd
 import plotly.express as px
 
 from cro.config import load_config
-from cro.utils import load_geo_table, log
+from cro.utils import log
 from cro.viz import charts, maps
 
 
@@ -59,9 +59,6 @@ def run() -> list[Path]:
     outputs = Path(cfg["paths"]["outputs"])
 
     master = pd.read_parquet(processed / "region_master.parquet")
-    # `load_geo_table` repairs geometry columns, which can come back from
-    # Parquet as raw WKB bytes rather than shapely objects.
-    lisa = load_geo_table(processed / "lisa_clusters.parquet")
     regions = gpd.read_parquet(processed / "regions.parquet")
 
     # Attach geometry once; everything downstream receives a GeoDataFrame.
@@ -69,11 +66,10 @@ def run() -> list[Path]:
     gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs="EPSG:4326")
 
     log("export: static maps")
-    map_files = maps.plot_all(gdf, lisa, outputs / "maps")
+    map_files = maps.plot_all(gdf, outputs / "maps")
 
     log("export: statistical figures")
     tables = {
-        "lorenz": pd.read_parquet(processed / "desc_lorenz.parquet"),
         "coefficients": pd.read_parquet(processed / "regression_coefficients.parquet"),
         "slopes": pd.read_parquet(processed / "country_slopes.parquet"),
         "stability": pd.read_parquet(processed / "rank_stability.parquet"),
@@ -85,8 +81,8 @@ def run() -> list[Path]:
     web = []
     specs = [
         ("hazard_equal", "Climate hazard index", "Hazard index (0-1)", "YlOrRd", "map_web_hazard.html"),
-        ("person_days_heat", "Population exposure to extreme heat",
-         "Person-days above 35 C", "Cividis", "map_web_exposure.html"),
+        ("exposure_score", "Exposure (population)",
+         "Exposure score (0-1)", "Cividis", "map_web_exposure.html"),
         ("shdi", "Subnational Human Development Index", "SHDI", "Viridis", "map_web_shdi.html"),
         ("risk_equal", "Composite climate risk", "Risk index (0-1)", "Magma", "map_web_risk.html"),
     ]

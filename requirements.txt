@@ -12,9 +12,6 @@ rasterio>=1.3
 # Statistics
 scipy>=1.12
 statsmodels>=0.14
-libpysal>=4.10
-esda>=2.6
-mapclassify>=2.6
 
 # Database
 sqlalchemy>=2.0

@@ -1,3 +1,5 @@
-hypothesis,test,n_regions,top_region_share_person_days,top_region_share_population,concentration_ratio,ci_low,ci_high,p_value,n_high_hazard,n_low_hazard,median_shdi_high_hazard,median_shdi_low_hazard,u_statistic,cliffs_delta,spearman_rho,spearman_p
-H1: exposure is concentrated in the most hazardous regions,share of person-days in top 10% hazard regions vs population share,105,0.6196120623519706,0.44877580484396107,1.3806717199636223,1.2094792078025711,1.7521643809474516,,,,,,,,,
-H2: high-hazard regions have lower development,Mann-Whitney U on SHDI (high vs low hazard) + Spearman correlation,99,,,,,,1.4429900163855387e-06,49.0,50.0,0.786,0.9359999999999999,536.0,-0.5624489795918367,-0.5893376813807114,1.3873263722909792e-10
+group,n_regions,spearman_rho,p_value,median_shdi_high_hazard,median_shdi_low_hazard
+ALL,99,-0.5893376813807114,1.3873263722909792e-10,0.786,0.9359999999999999
+FRA,13,0.1758241758241758,0.5655798619595344,0.9080833333333334,0.8983333333333334
+IND,35,-0.48336252307743516,0.003266494710711966,0.686,0.737
+USA,51,-0.4809147189425062,0.0003540401714955271,0.923,0.9424999999999999

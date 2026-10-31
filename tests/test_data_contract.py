@@ -41,7 +41,8 @@ def test_master_has_one_row_per_region():
 def test_indices_stay_between_zero_and_one():
     master = pd.read_parquet(PROCESSED / "region_master.parquet")
     columns = [c for c in ["hazard_equal", "exposure_score", "vulnerability",
-                           "risk_equal", "risk_additive"] if c in master.columns]
+                           "risk_equal", "risk_additive", "risk_per_person"]
+               if c in master.columns]
 
     assert columns, "no index columns found"
     for column in columns:
@@ -56,6 +57,13 @@ def test_risk_is_made_of_its_three_parts():
 
     expected = data["hazard_equal"] * data["exposure_score"] * data["vulnerability"]
     assert (data["risk_equal"] - expected).abs().max() < 1e-12
+
+
+def test_exposure_uses_population_only():
+    """Exposure is the population rank, so heat is not counted twice."""
+    master = pd.read_parquet(PROCESSED / "region_master.parquet")
+    expected = master["population"].rank(pct=True)
+    assert (master["exposure_score"] - expected).abs().max() < 1e-12
 
 
 def test_population_reconciles_between_two_methods():

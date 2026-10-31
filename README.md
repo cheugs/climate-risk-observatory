@@ -1,25 +1,66 @@
 # Climate Risk & Human Development Observatory
 
-**Which admin-1 regions carry the heaviest climate burden, and how does that relate to human development?**
+**Are the regions with the most extreme climate also the regions with the lowest human development?**
 
-This project builds a reproducible pipeline that puts climate hazard, population exposure and
-development on the same map, tests whether the three overlap, and ships the result as a report,
-static maps, interactive maps and a dashboard. The pilot covers **105 states, provinces and
-regions in France, India and the United States** (1.8 billion people). The same code is written so
-that it can be pointed at all ~3,700 admin-1 regions in the world without being rewritten.
+This project is a data pipeline in Python. It downloads open data on climate, population and
+human development, builds a climate risk index for each region, tests three hypotheses, and
+shows the results in maps, a written report (English and French) and a web dashboard.
+
+The pilot covers **105 admin-1 regions** (states, provinces, regions) in **France, India and the
+United States**, about 1.8 billion people. The same code can run on other countries by changing
+the configuration file.
 
 ---
 
-## Headline results (pilot)
+## Main results
 
-| Question | Result |
+| Hypothesis | Result |
 |---|---|
-| Is climate exposure concentrated? | The top 10% most hazardous regions hold **62%** of person-days of extreme heat while containing 45% of the population: concentration ratio **1.38** (95% CI 1.21-1.75). |
-| Do high-hazard regions have lower development? | Median SHDI **0.786** vs **0.936** (Mann-Whitney p = 1.4e-06, Cliff's delta = -0.56). |
-| Does that survive comparing within countries? | Yes, but it shrinks: pooled beta = **-0.69**, with country fixed effects beta = **-0.21** (95% CI -0.32 to -0.11, N = 99). |
-| Is the ranking sensitive to our choices? | No: four index versions agree at Spearman rho >= **0.96**. |
+| **H1.** Regions with more climate hazard have a lower SHDI | Yes on all regions: Spearman rho = **-0.59**, median SHDI **0.786** vs **0.936**. But most of it is the gap between India and the two other countries. Inside countries: rho = -0.48 in India, -0.48 in the USA, +0.18 in France (not significant). |
+| **H2.** This is still true inside each country | Yes, but smaller: the hazard coefficient goes from **-0.39** to **-0.10** (95% CI -0.14 to -0.06) when we add a country effect. Clear in India and the USA, not in France. |
+| **H3.** The ranking is stable when we change the index formula | Yes: the three versions have rank correlations of at least **0.86**, and at least **9 of the top 10** regions are the same. |
 
-Everything is an **association, not a causal effect**. The report says so in several places.
+All ten highest-risk regions are in India (Bihar, Uttar Pradesh, Madhya Pradesh...). Inside
+their own country, the highest-risk regions are Texas, Alabama and Louisiana (USA) and
+Auvergne-Rhône-Alpes, Occitanie and Nouvelle-Aquitaine (France).
+
+These results are **associations, not causes**.
+
+---
+
+## How the index is built
+
+Each indicator is turned into a **percentile rank** between 0 and 1, so we can mix days,
+millimetres and index points.
+
+```
+Hazard        = mean(heat, dry, wet)     heat = mean rank of HD35 and TR25
+                                         dry  = mean rank of CDD and -WBAL
+                                         wet  = mean rank of Rx1day and R50
+
+Exposure      = rank(population)
+
+Vulnerability = 1 - rank(SHDI)
+
+Risk          = Hazard x Exposure x Vulnerability
+```
+
+- We use a **product** because, following the IPCC, a region needs all three parts to be at risk:
+  a hot desert with nobody living there is not a disaster.
+- **Exposure uses population only.** Heat is already in the hazard score; if we also used
+  "population x heat days" here, heat would be counted twice.
+- Two other versions are used to check the ranking (H3): `additive` (mean of the three scores)
+  and `per_person` (hazard x vulnerability, without population, to check that the ranking is not
+  only a size effect).
+- `rank_in_country` gives the risk rank of each region inside its own country.
+
+## Statistical tests
+
+| Hypothesis | Method | Code |
+|---|---|---|
+| H1 | Spearman correlation hazard vs SHDI, on all regions and in each country; median SHDI of the more and less hazardous halves | `src/cro/analysis/tests.py` |
+| H2 | Linear regression (OLS, HC3 robust errors): M1 `shdi ~ hazard`, M2 `shdi ~ hazard + country dummies`; the same line fitted in each country | `src/cro/analysis/regression.py` |
+| H3 | Spearman correlation between the rankings of the three versions + number of shared top-10 regions | `src/cro/analysis/tests.py` |
 
 ---
 
@@ -31,13 +72,13 @@ python -m venv .venv
 .venv\Scripts\activate            # Windows
 pip install -e .
 
-# 2. Check that the data sources are still reachable
+# 2. Check that the data sources are reachable
 cro probe
 
-# 3. Run the pipeline (downloads ~500 MB once, then caches)
+# 3. Run the pipeline (downloads ~500 MB once, then uses a cache)
 cro all
 
-# 4. Quality checks, outputs, report
+# 4. Checks, outputs, report
 cro validate
 cro export
 cro report
@@ -46,21 +87,21 @@ cro report
 cro app            # http://127.0.0.1:8050
 ```
 
-Run steps individually when iterating:
+Each step can also be run alone:
 
 | Command | What it does |
 |---|---|
-| `cro boundaries` | Download ADM1 polygons from geoBoundaries |
+| `cro boundaries` | Download admin-1 polygons from geoBoundaries |
 | `cro climate-points` | Choose climate sample points inside each region |
 | `cro population` | Population per region and per sample point (GHS-POP) |
-| `cro climate` | Download daily NASA POWER series and build annual indicators |
+| `cro climate` | Download daily NASA POWER data and compute the yearly indicators |
 | `cro development` | SHDI from Global Data Lab + WDI from the World Bank |
-| `cro build` | Build hazard, exposure, vulnerability and the four risk versions |
-| `cro analyze` | Descriptives, hypothesis tests, regressions, spatial statistics |
-| `cro export` | 11 static maps, 6 statistical figures, 4 interactive maps |
-| `cro report` | Generate report snippets and render the report |
-| `cro validate` | Data-contract checks (exit code 1 on failure) |
-| `cro load` | Load everything into PostGIS |
+| `cro build` | Build hazard, exposure, vulnerability and the three risk versions |
+| `cro analyze` | Descriptive tables, H1 and H3 tests, H2 regressions |
+| `cro export` | 11 static maps, 6 figures, 4 interactive maps |
+| `cro report` | Build the report tables and render the report (EN + FR) with Quarto |
+| `cro validate` | 8 data checks (exit code 1 if one fails) |
+| `cro load` | Load the tables into PostGIS |
 | `cro app` | Start the Plotly Dash dashboard |
 | `cro all` | Run ingest -> build -> analyze -> export in order |
 
@@ -68,121 +109,70 @@ Run steps individually when iterating:
 
 ## Dashboard
 
-`cro app` opens a single scrolling page at <http://127.0.0.1:8050>, styled like an editorial
-spread rather than a wall of tabs:
+`cro app` opens one scrolling page at <http://127.0.0.1:8050>:
 
-- **02 the map** - one panel per country. Choose *all* to compare the three maps on a shared
-  colour scale, or choose one country to enlarge its map and rescale the colours to that country.
-- **03 the ranking** - the ten regions with the most of the selected measure. Click a row to load
-  it into the profile.
-- **04 the relationship** - hazard against SHDI, with the selected region ringed and the headline
-  statistics beside it.
-- **05 one place** - absolute numbers for one region plus its percentile position on six measures,
-  with the country median marked.
-- **06 methods & data** - the index definition, sources and the causal caveat.
+- **the map** - one panel per country. Choose *all* to compare the three countries on one colour
+  scale, or one country to see its internal differences.
+- **the ranking** - the ten regions with the highest value of the chosen measure.
+- **the relationship** - hazard against SHDI, with one trend line per country and the H1/H2/H3
+  results next to it (read from the result tables, never typed by hand).
+- **one place** - the numbers of one region and its position compared with the others.
+- **methods & data** - how the index is built and its limits.
 
-The controls at the top switch country, map measure and region, and stay pinned while you scroll.
-Clicking any map region also loads it into the profile. The dashboard reads PostGIS when it is
-running and falls back to the Parquet files, so it works without Docker.
+Other pages on the same server:
 
-### Reading the written report
+- `/summary` - a two-minute summary of the report (`/summary?lang=fr` in French)
+- `/report` and `/report.pdf` - the full report (`/report/fr` and `/report/fr.pdf` in French)
+- `/maps/map_web_risk.html` (and `hazard`, `exposure`, `shdi`) - interactive maps
 
-The dashboard is the visual entry point, but the argument is written out as well. Two links sit
-in the top bar and in the band at the bottom of the page:
+Every page has an **EN / FR** switch. The dashboard reads PostGIS when it is running and the
+Parquet files otherwise, so it works without Docker.
 
-- **summary** at <http://127.0.0.1:8050/summary> - a two-minute reading page with the question,
-  the index definition, the four findings, the top-ten table, the country table, the caveats and
-  links to the full document. Its numbers are rendered from the same `outputs/tables/t01-t09.csv`
-  files as the report, so the two cannot drift apart. The hero also links to it, which matters on
-  narrow screens where the top bar links are hidden.
-- **full report** at <http://127.0.0.1:8050/report> - the self-contained Quarto HTML report.
-- **report.pdf** at <http://127.0.0.1:8050/report.pdf> - the print version.
-- **French versions** at `/summary?lang=fr`, `/report/fr` and `/report/fr.pdf`.
-- **interactive maps** at `/maps/map_web_risk.html`, plus `map_web_hazard.html`,
-  `map_web_exposure.html` and `map_web_shdi.html`. The report links to the full URLs, so a
-  reader of the HTML or the PDF can open a map without cloning anything.
+## Deployment
 
-Every page carries an **EN / FR** switch in the top bar. It is a plain link rather than a
-JavaScript toggle: clicking it reloads the page in the other language, so no server-rendered
-string or figure can be left behind. The choice is remembered in a `cro_lang` cookie, which is why
-the switch follows you from the dashboard to the summary and back.
+The app is live on Render's free plan: **<https://climate-risk-observatory.onrender.com>**.
+The free instance sleeps after 15 minutes without visitors, so the first request can take about
+a minute.
 
-These are plain Flask routes added to the same server, so there is nothing extra to start: run
-`cro app` and all of them are available. If the report tables are missing, `/summary` still loads
-and explains which step to run.
-
-## Deploy it for free
-
-The observatory is live on Render's free plan at
-**<https://climate-risk-observatory.onrender.com>**:
-
-- dashboard - <https://climate-risk-observatory.onrender.com/>
-- summary - <https://climate-risk-observatory.onrender.com/summary>
-- report - <https://climate-risk-observatory.onrender.com/report>
-- PDF - <https://climate-risk-observatory.onrender.com/report.pdf>
-- synthèse (FR) - <https://climate-risk-observatory.onrender.com/summary?lang=fr>
-- rapport (FR) - <https://climate-risk-observatory.onrender.com/report/fr>
-- PDF (FR) - <https://climate-risk-observatory.onrender.com/report/fr.pdf>
-
-The free instance sleeps after 15 minutes without visitors, so the first request may take about a
-minute; after that it is responsive. The URL is stable - it does not change between deploys.
-
-The app is an ordinary Flask server, so it runs on a free host. It reads `PORT` from the
-environment and binds to `0.0.0.0`; `requirements-deploy.txt` contains only the runtime packages,
-and `render.yaml` is a ready-made Render blueprint. The deployment needs the simplified dashboard
-table and the report tables, not the raw downloads.
-
-See **[docs/deploy.md](docs/deploy.md)** for the step-by-step free options: Render (recommended),
-a Cloudflare Tunnel from your own computer, and a static-only summary/report. It also explains
-what to do if the host has 512 MB of RAM (the app uses about 180 MB) and why Hugging Face Docker
-Spaces, PythonAnywhere and Koyeb are not suitable for this stack.
-
----
-
-## How the index is built
-
-Every indicator is converted to a **percentile rank**, so days, millimetres and index points can
-be compared without assuming a normal distribution.
-
-```
-Hazard        = mean(heat, dry, wet)            heat = f(HD35, TR25)
-                                               dry  = f(CDD, -WBAL)
-                                               wet  = f(Rx1day, R50)
-
-Exposure      = sum(population x heat days)     then log + percentile rank
-
-Vulnerability = 1 - percentile rank(SHDI)
-
-Risk          = Hazard x Exposure x Vulnerability
-```
-
-A product is used because the IPCC definition of risk requires all three parts: a hazard with
-nobody exposed is not a disaster. An additive version, a PCA-weighted version and a
-population-weighted-climate version are kept as robustness checks.
+`render.yaml` is the Render blueprint and `requirements-deploy.txt` lists only the packages the
+app needs. See **[docs/deploy.md](docs/deploy.md)** for the steps.
 
 ---
 
 ## Repository layout
 
 ```
-config/config.yaml              every setting a reader might want to change
-src/cro/ingest/                 boundaries, climate, population, development, probes
+config/config.yaml              all settings (countries, thresholds, years)
+config/indicators.yaml          name, unit and direction of each indicator
+src/cro/ingest/                 download boundaries, climate, population, development
 src/cro/features/build.py       hazard, exposure, vulnerability, risk versions
-src/cro/analysis/               descriptives, hypotheses, regression, spatial statistics
-src/cro/viz/                    shared theme, static maps, charts, export
-src/cro/app/                    Plotly Dash dashboard + Flask summary/report routes
-src/cro/app/i18n.py             every English/French string and number format
-src/cro/db/                     PostGIS schema and idempotent loader
-src/cro/report/                 report snippets + Quarto render (markdown fallback)
-report/                         report.qmd / report.fr.qmd, theme.scss, language pill
-tests/                          indicator maths, data contracts, presentation smoke tests
-data/processed/                 all intermediate tables as Parquet
-outputs/maps|figures|tables/    deliverables
+src/cro/analysis/               descriptive tables, H1/H3 tests, H2 regression
+src/cro/viz/                    shared theme, static maps, charts, interactive maps
+src/cro/app/                    Dash dashboard + summary and report pages
+src/cro/app/i18n.py             all English/French texts of the dashboard
+src/cro/db/                     PostGIS schema and loader
+src/cro/report/                 report tables + Quarto rendering
+report/                         report.qmd / report.fr.qmd
+tests/                          unit tests, data checks, dashboard tests
+data/processed/                 intermediate tables (Parquet)
+outputs/maps|figures|tables/    results
 outputs/report/                 report(.fr).html/.pdf, validation.md, key_results.md
 ```
 
-The analysis table `data/processed/region_master.parquet` is the single source every output reads
-from, so maps, tables and the dashboard can never disagree with each other.
+`data/processed/region_master.parquet` is the one table that every output reads, so the maps,
+the tables and the dashboard always agree.
+
+### Output tables
+
+| File | Content |
+|---|---|
+| `t01_summary_by_country.csv` | means by country |
+| `t02_climate_by_country.csv` | climate indicators by country |
+| `t03_top_bottom_regions.csv` | highest and lowest risk regions |
+| `t05_hypothesis_tests.csv` | H1: Spearman correlation, all regions and by country |
+| `t06_rank_stability.csv` | H3: agreement between the three index versions |
+| `t07_regression_coefficients.csv` | H2: models M1 and M2 |
+| `t08_country_slopes.csv` | H2: slope in each country |
 
 ---
 
@@ -190,42 +180,26 @@ from, so maps, tables and the dashboard can never disagree with each other.
 
 | Layer | Source | Resolution | Year | Licence |
 |---|---|---|---|---|
-| Boundaries | [geoBoundaries](https://www.geoboundaries.org/) (gbOpen) | ADM1 polygons | 2024 release | CC-BY 4.0 |
-| Climate | [NASA POWER](https://power.larc.nasa.gov/) (MERRA-2) | point daily series | 1991-2023 | Open, no key |
-| Population | [GHS-POP R2023A](https://ghsl.jrc.ec.europa.eu/) | 30 arc-seconds (~1 km) | 2020 | CC-BY 4.0 |
-| Subnational development | [Global Data Lab SHDI](https://globaldatalab.org/shdi/) | admin-1 | latest available | Free for research |
+| Boundaries | [geoBoundaries](https://www.geoboundaries.org/) (gbOpen) | admin-1 polygons | 2024 release | CC-BY 4.0 |
+| Climate | [NASA POWER](https://power.larc.nasa.gov/) (MERRA-2) | daily point series | 1991-2023 | Open, no key |
+| Population | [GHS-POP R2023A](https://ghsl.jrc.ec.europa.eu/) | ~1 km | 2020 | CC-BY 4.0 |
+| Development | [Global Data Lab SHDI](https://globaldatalab.org/shdi/) | admin-1 | latest available | Free for research |
 | National context | [World Bank WDI](https://databank.worldbank.org/source/world-development-indicators) | country | 2010-2023 | CC-BY 4.0 |
 
-Evapotranspiration is not provided by NASA POWER, so reference ET is estimated with the
-Hargreaves equation (Hargreaves & Samani, 1985) from daily maximum/minimum temperature and
-latitude.
-
-If you reuse this work, cite the sources above, not this repository alone.
+NASA POWER does not give evapotranspiration, so we estimate it with the Hargreaves formula
+(Hargreaves & Samani, 1985) from daily minimum/maximum temperature and latitude.
 
 ---
 
-## Reproducibility
+## Quality and tests
 
-- Every step writes Parquet to `data/processed/`, so a stage can be re-run without repeating the
-  downloads.
-- NASA POWER responses are cached per request, so an interrupted download resumes.
-- `cro validate` checks eight data contracts (unique region ids, valid geometry, population
-  reconciliation, physical ranges, index bounds, development coverage, expected tables).
-- The report pulls generated tables and key numbers from the analysis output instead of
-  hand-copied values, so it cannot silently go stale.
-- The report renders with Quarto when available and falls back to a plain HTML build otherwise.
-
-### Tests
-
-```bash
-pytest -q
-```
-
-- `tests/test_indicators.py` - hand-checked maths on toy data.
-- `tests/test_data_contract.py` - the real files on disk (skipped before the pipeline is run).
-- `tests/test_presentation.py` - geometry repair, map building, dashboard callbacks.
-
----
+- `cro validate` runs 8 data checks: unique regions, valid geometry, population totals, physical
+  ranges, scores between 0 and 1, SHDI coverage, master table and output tables.
+- `pytest -q` runs the tests:
+  - `tests/test_indicators.py` - the index maths and the statistical functions on small examples;
+  - `tests/test_data_contract.py` - checks on the real files (skipped before the pipeline runs);
+  - `tests/test_presentation.py` - maps, dashboard callbacks and pages.
+- The report and the dashboard read their numbers from the same CSV tables.
 
 ## PostGIS (optional)
 
@@ -235,41 +209,28 @@ cro load
 ```
 
 This creates `dim_region`, `dim_country`, `fact_climate`, `fact_population`, `fact_exposure`,
-`fact_development`, `fact_risk` and the view `vw_region_profile` on port **5433**. The dashboard
-prefers the database and silently falls back to Parquet when it is not running, so the project
-works on a laptop without Docker.
+`fact_development`, `fact_risk` (one row per region and index version) and the view
+`vw_region_profile` on port **5433**.
 
 ---
 
-## Known limitations
+## Limitations
 
-1. **Association, not causation.** Country fixed effects absorb time-invariant national
-   differences, not time-varying shocks or reverse causality.
-2. **One development indicator.** SHDI does not capture inequality inside a region, which is often
-   what decides who suffers in a heatwave. Subnational poverty (World Bank SPID) is the obvious
-   next step.
-3. **Static population.** GHS-POP 2020 is applied to a 2004-2023 climate baseline.
-4. **Coarse sampling.** Up to eight points per region is adequate for Bihar and thin for Alaska;
-   the count scales with area, not with climate heterogeneity.
-5. **Arbitrary thresholds.** 35 C and 50 mm are defensible but they are choices; different
-   thresholds give different maps.
-6. **Pilot selection.** France, India and the USA were chosen to stress-test the pipeline, not to
-   be representative of the world.
-7. **Boundary vintage.** geoBoundaries and Global Data Lab do not always agree (Ladakh, merged
-   Dadra and Nagar Haveli and Daman and Diu). Six regions have no SHDI match and are excluded from
-   the development models rather than filled with a country average.
+1. **Association, not causation.** History, geography and the economy can explain both climate
+   and development.
+2. **Neighbouring regions are similar.** The tests treat regions as independent, so the p-values
+   are probably too small. A spatial regression model would be the next step.
+3. **Small sample.** 99 regions with SHDI; France has only 13, so its results are uncertain.
+4. **One development indicator.** SHDI does not show inequality inside a region.
+5. **Fixed thresholds.** 35 C and 50 mm are choices; France has almost no days above 35 C.
+6. **Static population.** Population is for 2020; the climate mean is for 2004-2023.
+7. **Coarse sampling.** At most 8 climate points per region.
+8. **Pilot countries.** France, India and the USA were chosen because they are different, not
+   because they represent the world.
 
----
+## Next steps
 
-## Scaling to the world
-
-Moving from 3 countries to ~150 is a configuration change:
-
-1. Set `project.pilot_iso3` to `["ALL"]` (or list the countries you want).
-2. Expect ~15,000 NASA POWER requests at up to 8 points per region: about 2 hours at 4 workers,
-   plus cache storage.
-3. With more than 20 countries the regression switches to country-clustered standard errors, and
-   cross-border contiguity makes a single global Moran's I meaningful.
-
-A forward-looking appendix (CMIP6 downscaled projections, SSP2-4.5 / SSP5-8.5) is deliberately
-kept outside the core analysis so that measured and modelled climate are not mixed.
+- Add more countries: set `project.pilot_iso3` in `config/config.yaml` (for example `["ALL"]`).
+- Use a spatial regression model.
+- Add a poverty indicator (for example World Bank subnational poverty data).
+- Test other heat thresholds (30 C, 40 C).

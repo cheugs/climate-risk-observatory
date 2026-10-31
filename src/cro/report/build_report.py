@@ -19,6 +19,7 @@ Run it with:  cro report
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -69,8 +70,11 @@ FRENCH_COLUMNS = {
     "N": "N",
     "R squared": "R²",
     "Slope (95% CI)": "Pente (IC à 95 %)",
-    "Moran's I": "I de Moran",
-    "p (simulated)": "p (simulée)",
+    "Group": "Groupe",
+    "Median SHDI, more hazard": "IDH-S médian, plus d'aléa",
+    "Median SHDI, less hazard": "IDH-S médian, moins d'aléa",
+    "Same in top 10": "Communes au top 10",
+    "Coefficient (95% CI)": "Coefficient (IC à 95 %)",
     "People (m)": "Population (M)",
 }
 
@@ -78,34 +82,12 @@ FRENCH_VALUES = {
     "Country": {
         "ALL": "Tous",
     },
+    "Group": {
+        "ALL": "Tous",
+    },
     "Model": {
-        "M1 pooled": "M1 groupé",
-        "M2 controls": "M2 contrôles",
-        "M3 country FE": "M3 effets fixes pays",
-        "M4 components": "M4 composantes",
-    },
-    "Variable": {
-        "hazard_equal_z": "aléa (z)",
-        "hazard_heat_z": "aléa chaleur (z)",
-        "hazard_dry_z": "aléa sécheresse (z)",
-        "hazard_wet_z": "aléa humidité (z)",
-        "abs_lat_z": "|latitude| (z)",
-        "log_density_z": "log(densité) (z)",
-        "remote": "éloignement",
-        "risk_equal": "risque composite",
-        "hazard_equal": "aléa",
-        "shdi": "IDH-S",
-    },
-    "Test": {
-        "H1 Concentration ratio": "H1 Ratio de concentration",
-        "H1 Share of person-days, top 10%": "H1 Part des jours-personnes, 10 % supérieurs",
-        "H1 Share of population, top 10%": "H1 Part de la population, 10 % supérieurs",
-        "H2 Median SHDI, high hazard": "H2 IDH-S médian, aléa élevé",
-        "H2 Median SHDI, low hazard": "H2 IDH-S médian, aléa faible",
-        "H2 Mann-Whitney p": "H2 p de Mann-Whitney",
-        "H2 Cliff's delta": "H2 delta de Cliff",
-        "H2 Spearman rho": "H2 rho de Spearman",
-        "H2 Spearman p": "H2 p de Spearman",
+        "M1 all regions": "M1 toutes les régions",
+        "M2 country effects": "M2 effets pays",
     },
 }
 
@@ -114,15 +96,14 @@ FRENCH_CAPTIONS = {
     "Table 2. Mean climate indicators by country, 2004-2023.":
         "Tableau 2. Indicateurs climatiques moyens par pays, 2004-2023.",
     "Table 3. The ten highest-risk regions.": "Tableau 3. Les dix régions les plus à risque.",
-    "Table 4. Hypothesis tests H1 and H2.": "Tableau 4. Tests d'hypothèses H1 et H2.",
-    "Table 5. Agreement between index versions.":
-        "Tableau 5. Concordance entre les versions de l'indice.",
-    "Table 6. Regression coefficients (standardised).":
-        "Tableau 6. Coefficients de régression (standardisés).",
-    "Table 7. Within-country slope of SHDI on hazard.":
-        "Tableau 7. Pente intra-pays de l'IDH-S sur l'aléa.",
-    "Table 8. Moran's I by country (Queen contiguity).":
-        "Tableau 8. I de Moran par pays (contiguïté reine).",
+    "Table 4. H1: Spearman correlation between hazard and SHDI.":
+        "Tableau 4. H1 : corrélation de Spearman entre l'aléa et l'IDH-S.",
+    "Table 5. H2: hazard coefficient in the two regression models.":
+        "Tableau 5. H2 : coefficient de l'aléa dans les deux modèles de régression.",
+    "Table 6. H2: slope of SHDI on hazard in each country.":
+        "Tableau 6. H2 : pente de l'IDH-S sur l'aléa dans chaque pays.",
+    "Table 7. H3: agreement between the three index versions.":
+        "Tableau 7. H3 : concordance entre les trois versions de l'indice.",
 }
 
 
@@ -190,15 +171,11 @@ def _fmt(value, digits: int = 2, lang: str = "en") -> str:
     return f"{float(value):.{digits}f}"
 
 
-def _pct(value, digits: int = 1, lang: str = "en") -> str:
-    """A share: '12.3%' in English, '12,3 %' in French."""
-    text = _fmt(value * 100, digits, lang)
-    return f"{text}\u00a0%" if lang == "fr" else f"{text}%"
-
-
-def _sci(value, lang: str = "en") -> str:
-    """A small p-value without fake precision."""
-    text = f"{value:.2g}"
+def _p_value(value, lang: str = "en") -> str:
+    """'< 0.001' for very small p-values, otherwise three decimals."""
+    if pd.isna(value):
+        return "n.d." if lang == "fr" else "n/a"
+    text = "< 0.001" if value < 0.001 else f"{value:.3f}"
     return text.replace(".", ",") if lang == "fr" else text
 
 
@@ -273,53 +250,47 @@ def write_summary_snippet(lang: str = "en") -> None:
     with open(key_path, "r", encoding="utf-8") as f:
         key = json.load(f)
 
-    h3 = key.get("h3_country_fe_beta") or {}
+    h1 = key["h1"]["ALL"]
+    m2 = key["h2_country_effects"]
     if lang == "fr":
         population = _fmt(key["population_millions"] / 1000, 2, lang)
         unit = "milliard" if abs(key["population_millions"] / 1000) < 2 else "milliards"
         lines = [
             "::: {.callout-note}",
-            "**Les chiffres clés en un coup d'œil**",
+            "**Les chiffres clés**",
             "",
-            f"- **{key['n_regions']}** régions admin-1 dans **{key['n_countries']}** pays, "
-            f"couvrant **{population} {unit}** de personnes.",
-            f"- Données de développement disponibles pour "
-            f"**{key['regions_with_development']}** d'entre elles.",
-            f"- Ratio de concentration (H1) : **{_fmt(key['h1_concentration_ratio'], 2, lang)}** "
-            f"(IC à 95\u00a0% : {_fmt(key['h1_ci'][0], 2, lang)} à "
-            f"{_fmt(key['h1_ci'][1], 2, lang)}).",
-            f"- IDH-S médian, aléa élevé contre aléa faible (H2) : "
-            f"**{_fmt(key['h2_median_shdi_high_hazard'], 3, lang)}** contre "
-            f"**{_fmt(key['h2_median_shdi_low_hazard'], 3, lang)}**, "
-            f"p = {_sci(key['h2_p_value'], lang)}.",
+            f"- **{key['n_regions']}** régions dans **{key['n_countries']}** pays, "
+            f"soit **{population} {unit}** de personnes ; IDH-S disponible pour "
+            f"**{key['regions_with_development']}** régions.",
+            f"- H1 : corrélation de Spearman aléa-IDH-S = **{_fmt(h1['rho'], 2, lang)}** "
+            f"(IDH-S médian {_fmt(h1['median_shdi_high_hazard'], 3, lang)} contre "
+            f"{_fmt(h1['median_shdi_low_hazard'], 3, lang)}).",
+            f"- H2 : avec un effet pays, coefficient de l'aléa = **{_fmt(m2['beta'], 2, lang)}** "
+            f"(IC à 95\u00a0% : {_interval(m2['ci'][0], m2['ci'][1], lang, 2)}).",
+            f"- H3 : au moins **{key['h3_min_same_in_top10']}** des 10 premières régions "
+            f"sont les mêmes dans les trois versions de l'indice.",
+            ":::",
+            "",
         ]
-        if h3:
-            lines.append(
-                f"- Coefficient d'aléa intra-pays (H3) : **{_fmt(h3['beta'], 2, lang)}** "
-                f"(IC à 95\u00a0% : {_fmt(h3['ci'][0], 2, lang)} à "
-                f"{_fmt(h3['ci'][1], 2, lang)}, N = {h3['n']})."
-            )
-        lines += [":::", ""]
         out_dir = GENERATED_FR
     else:
         lines = [
             "::: {.callout-note}",
-            "**Key numbers at a glance**",
+            "**Key numbers**",
             "",
-            f"- **{key['n_regions']}** admin-1 regions in **{key['n_countries']}** countries, "
-            f"covering **{key['population_millions']:.1f} million** people.",
-            f"- Development data available for **{key['regions_with_development']}** of them.",
-            f"- Concentration ratio (H1): **{key['h1_concentration_ratio']:.2f}** "
-            f"(95% CI {key['h1_ci'][0]:.2f}-{key['h1_ci'][1]:.2f}).",
-            f"- Median SHDI, high vs low hazard (H2): **{key['h2_median_shdi_high_hazard']:.3f}** "
-            f"vs **{key['h2_median_shdi_low_hazard']:.3f}**, p = {key['h2_p_value']:.2g}.",
+            f"- **{key['n_regions']}** regions in **{key['n_countries']}** countries, "
+            f"**{key['population_millions']:.1f} million** people; SHDI available for "
+            f"**{key['regions_with_development']}** regions.",
+            f"- H1: Spearman correlation hazard-SHDI = **{h1['rho']:.2f}** "
+            f"(median SHDI {h1['median_shdi_high_hazard']:.3f} vs "
+            f"{h1['median_shdi_low_hazard']:.3f}).",
+            f"- H2: with a country effect, hazard coefficient = **{m2['beta']:.2f}** "
+            f"(95% CI {m2['ci'][0]:.2f} to {m2['ci'][1]:.2f}).",
+            f"- H3: at least **{key['h3_min_same_in_top10']}** of the top 10 regions are "
+            f"the same in the three index versions.",
+            ":::",
+            "",
         ]
-        if h3:
-            lines.append(
-                f"- Within-country hazard coefficient (H3): **{h3['beta']:.2f}** "
-                f"(95% CI {h3['ci'][0]:.2f} to {h3['ci'][1]:.2f}, N = {h3['n']})."
-            )
-        lines += [":::", ""]
         out_dir = GENERATED_DIR
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -378,101 +349,77 @@ def write_table_snippets(lang: str = "en") -> None:
             encoding="utf-8",
         )
 
-    # --- Table 4: hypothesis tests ---------------------------------------
+    # --- Table 4: H1 correlations ----------------------------------------
     tests = _read_table("t05_hypothesis_tests.csv")
     if not tests.empty:
-        h1 = tests.iloc[0]
-        h2 = tests.iloc[1]
-        rows = [
-            ("H1 Concentration ratio", _fmt(h1["concentration_ratio"], 2, lang),
-             _interval(h1["ci_low"], h1["ci_high"], lang, 2), "-"),
-            ("H1 Share of person-days, top 10%", _pct(h1["top_region_share_person_days"], 1, lang),
-             "-", "-"),
-            ("H1 Share of population, top 10%", _pct(h1["top_region_share_population"], 1, lang),
-             "-", "-"),
-            ("H2 Median SHDI, high hazard", _fmt(h2["median_shdi_high_hazard"], 3, lang), "-", "-"),
-            ("H2 Median SHDI, low hazard", _fmt(h2["median_shdi_low_hazard"], 3, lang), "-", "-"),
-            ("H2 Mann-Whitney p", "-", "-", _sci(h2["p_value"], lang)),
-            ("H2 Cliff's delta", _fmt(h2["cliffs_delta"], 2, lang), "-", "-"),
-            ("H2 Spearman rho", _fmt(h2["spearman_rho"], 2, lang), "-", "-"),
-            ("H2 Spearman p", "-", "-", _sci(h2["spearman_p"], lang)),
-        ]
-        table = pd.DataFrame(rows, columns=["Test", "Estimate", "95% CI", "p-value"])
-        (out_dir / "t05.md").write_text(
-            _markdown_table(table, "Table 4. Hypothesis tests H1 and H2.", lang),
-            encoding="utf-8",
-        )
-
-    # --- Table 5: rank stability -----------------------------------------
-    stability = _read_table("t06_rank_stability.csv")
-    if not stability.empty:
-        table = stability.rename(columns={
-            "version_a": "Version A", "version_b": "Version B",
-            "n_regions": "Regions", "spearman_rho": "Spearman rho",
-            "p_value": "p-value",
+        table = pd.DataFrame({
+            "Group": tests["group"],
+            "Regions": tests["n_regions"],
+            "Spearman rho": tests["spearman_rho"].map(lambda v: _fmt(v, 2, lang)),
+            "p-value": tests["p_value"].map(lambda v: _p_value(v, lang)),
+            "Median SHDI, more hazard": tests["median_shdi_high_hazard"].map(
+                lambda v: _fmt(v, 3, lang)),
+            "Median SHDI, less hazard": tests["median_shdi_low_hazard"].map(
+                lambda v: _fmt(v, 3, lang)),
         })
-        (out_dir / "t06.md").write_text(
-            _markdown_table(table, "Table 5. Agreement between index versions.", lang),
+        (out_dir / "t05.md").write_text(
+            _markdown_table(table, "Table 4. H1: Spearman correlation between hazard and SHDI.",
+                            lang),
             encoding="utf-8",
         )
 
-    # --- Table 6: regression coefficients --------------------------------
+    # --- Table 5: regression models --------------------------------------
     coefficients = _read_table("t07_regression_coefficients.csv")
     if not coefficients.empty:
-        wanted = ["hazard_equal_z", "hazard_heat_z", "hazard_dry_z", "hazard_wet_z",
-                  "abs_lat_z", "log_density_z", "remote"]
-        table = coefficients[coefficients["term"].isin(wanted)].copy()
-        table["estimate"] = table.apply(
-            lambda row: f"{_fmt(row['beta'], 3, lang)} "
-                        f"({_interval(row['ci_low'], row['ci_high'], lang, 3)})",
-            axis=1,
-        )
-        table["significance"] = table["p_value"].map(
-            lambda p: "***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else ""
-        )
-        table = table[["model", "term", "estimate", "significance", "n_obs", "r_squared"]]
-        table = table.rename(columns={
-            "model": "Model", "term": "Variable", "estimate": "Beta (95% CI)",
-            "significance": "Sig.", "n_obs": "N", "r_squared": "R squared",
+        table = pd.DataFrame({
+            "Model": coefficients["model"],
+            "Coefficient (95% CI)": coefficients.apply(
+                lambda row: f"{_fmt(row['beta'], 3, lang)} "
+                            f"({_interval(row['ci_low'], row['ci_high'], lang, 3)})",
+                axis=1,
+            ),
+            "p-value": coefficients["p_value"].map(lambda v: _p_value(v, lang)),
+            "N": coefficients["n_obs"],
+            "R squared": coefficients["r_squared"].map(lambda v: _fmt(v, 2, lang)),
         })
         (out_dir / "t07.md").write_text(
-            _markdown_table(table, "Table 6. Regression coefficients (standardised).", lang),
+            _markdown_table(table, "Table 5. H2: hazard coefficient in the two regression models.",
+                            lang),
             encoding="utf-8",
         )
 
-    # --- Table 7: country slopes -----------------------------------------
+    # --- Table 6: country slopes -----------------------------------------
     slopes = _read_table("t08_country_slopes.csv")
     if not slopes.empty:
-        table = slopes.copy()
-        table["estimate"] = table.apply(
-            lambda row: f"{_fmt(row['slope'], 3, lang)} "
-                        f"({_interval(row['ci_low'], row['ci_high'], lang, 3)})",
-            axis=1,
-        )
-        table = table[["iso3", "n_regions", "estimate", "p_value", "r_squared"]]
-        table = table.rename(columns={
-            "iso3": "Country", "n_regions": "Regions", "estimate": "Slope (95% CI)",
-            "p_value": "p-value", "r_squared": "R squared",
+        table = pd.DataFrame({
+            "Country": slopes["iso3"],
+            "Regions": slopes["n_regions"],
+            "Slope (95% CI)": slopes.apply(
+                lambda row: f"{_fmt(row['slope'], 3, lang)} "
+                            f"({_interval(row['ci_low'], row['ci_high'], lang, 3)})",
+                axis=1,
+            ),
+            "p-value": slopes["p_value"].map(lambda v: _p_value(v, lang)),
+            "R squared": slopes["r_squared"].map(lambda v: _fmt(v, 2, lang)),
         })
         (out_dir / "t08.md").write_text(
-            _markdown_table(table, "Table 7. Within-country slope of SHDI on hazard.", lang),
+            _markdown_table(table, "Table 6. H2: slope of SHDI on hazard in each country.", lang),
             encoding="utf-8",
         )
 
-    # --- Table 8: Moran's I ----------------------------------------------
-    moran = _read_table("t09_morans_i.csv")
-    if not moran.empty:
-        within = moran[moran["scope"] != "all countries"].copy()
-        table = within[["scope", "variable", "n_regions", "morans_i", "p_sim"]]
-        table = table.rename(columns={
-            "scope": "Scope", "variable": "Variable", "n_regions": "Regions",
-            "morans_i": "Moran's I", "p_sim": "p (simulated)",
+    # --- Table 7: rank stability -----------------------------------------
+    stability = _read_table("t06_rank_stability.csv")
+    if not stability.empty:
+        table = pd.DataFrame({
+            "Version A": stability["version_a"],
+            "Version B": stability["version_b"],
+            "Regions": stability["n_regions"],
+            "Spearman rho": stability["spearman_rho"].map(lambda v: _fmt(v, 2, lang)),
+            "Same in top 10": stability["same_in_top10"],
         })
-        # Pivot to one row per variable and one column per country.
-        wide = table.pivot_table(index="Variable", columns="Scope",
-                                 values="Moran's I", aggfunc="first").reset_index()
-        (out_dir / "t09.md").write_text(
-            _markdown_table(wide, "Table 8. Moran's I by country (Queen contiguity).", lang),
+        (out_dir / "t06.md").write_text(
+            _markdown_table(table, "Table 7. H3: agreement between the three index versions.",
+                            lang),
             encoding="utf-8",
         )
 
@@ -481,6 +428,9 @@ def write_table_snippets(lang: str = "en") -> None:
     validation = Path(cfg["paths"]["outputs"]) / "report" / "validation.md"
     if validation.exists():
         text = validation.read_text(encoding="utf-8")
+        # The file starts with a level-1 title. Inside the report it must not
+        # start a new chapter, so we turn it into a bold line.
+        text = re.sub(r"^# (.+)$", r"**\1**", text, flags=re.MULTILINE)
         if lang == "fr":
             text = _french_validation(text)
         (out_dir / "validation.md").write_text(text, encoding="utf-8")

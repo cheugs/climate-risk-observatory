@@ -27,21 +27,12 @@ COUNTRY_COLORS = {
     "USA": "#3f8f6b",
 }
 
-# Sequential scales for hazard / exposure / risk, and a diverging scale for
-# clusters.
+# Colour scales for hazard / exposure / risk / development.
 CMAP_HAZARD = "YlOrRd"
 CMAP_RISK = "magma_r"
 CMAP_DEVELOPMENT = "viridis"
 CMAP_EXPOSURE = "cividis"
 
-LISA_COLORS = {
-    "HH": "#b2182b",
-    "LL": "#2166ac",
-    "HL": "#ef8a62",
-    "LH": "#67a9cf",
-    "not significant": "#e6e6e6",
-    "no neighbours": "#c9c9c9",
-}
 
 
 def apply_style() -> None:
@@ -73,6 +64,12 @@ def apply_style() -> None:
 def save_figure(fig, path, note: str | None = None) -> None:
     """Save a figure and add a small source note at the bottom."""
     if note:
-        fig.text(0.01, 0.005, note, fontsize=7, color=COLORS["muted"], ha="left")
+        # Put the note just below everything else (axis labels included), so
+        # it never overlaps the x-axis title.
+        fig.canvas.draw()
+        bottom = min(ax.get_tightbbox().transformed(fig.transFigure.inverted()).y0
+                     for ax in fig.axes)
+        fig.text(0.01, bottom - 0.02, note, fontsize=7, color=COLORS["muted"],
+                 ha="left", va="top")
     fig.savefig(path, dpi=300, bbox_inches="tight", facecolor="white")
     plt.close(fig)

@@ -1,17 +1,18 @@
 """Build the analysis table.
 
-This step turns the raw measurements into three interpretable blocks:
+This step turns the raw data into three simple scores, each between 0 and 1:
 
     Hazard        = how extreme the climate is (heat, dry, wet)
-    Exposure      = how many people live in those conditions
-    Vulnerability = how little development there is to cope with them
+    Exposure      = how many people live in the region
+    Vulnerability = how low human development is
 
-Then it combines them into a Risk score following the IPCC idea:
+Then it combines them into one Risk score, following the IPCC idea that
+risk needs all three parts:
 
     Risk = Hazard x Exposure x Vulnerability
 
-Every block is turned into a 0-1 score using percentile ranks, so the
-units (days, mm, index points) do not need to be comparable.
+We use percentile ranks to build each score, so we can mix days,
+millimetres and index points without unit problems.
 """
 
 from __future__ import annotations
@@ -23,6 +24,9 @@ import pandas as pd
 
 from cro.config import load_config
 from cro.utils import log, percentile_rank, save_table
+
+# The three versions of the risk index. "equal" is the main one.
+VERSIONS = ["equal", "additive", "per_person"]
 
 
 # ---------------------------------------------------------------------------
@@ -51,9 +55,9 @@ def load_inputs() -> dict:
 def build_hazard(climate: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     """Turn the six climate indicators into a hazard score.
 
-    Wet and dry are kept apart on purpose. A desert and a monsoon coast can
-    both be "high hazard", but for opposite reasons, so averaging all six
-    indicators into one number would hide that.
+    We first build three sub-scores (heat, dry, wet), then take their mean.
+    Wet and dry are kept apart because a desert and a monsoon coast can both
+    be "high hazard", but for opposite reasons.
     """
     data = climate.copy()
 
@@ -72,47 +76,7 @@ def build_hazard(climate: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     data["hazard_wet"] = p[["rx1d", "r50"]].mean(axis=1)
     data["hazard_equal"] = data[["hazard_heat", "hazard_dry", "hazard_wet"]].mean(axis=1)
 
-    # A second version that lets the data decide the weights (PCA).
-    data["hazard_pca"] = _pca_hazard(p[["hd35", "tr25", "cdd", "wbal", "rx1d", "r50"]])
-
-    # A third version using population-weighted climate instead of area-weighted.
-    pop_cols = ["hd35_pop", "tr25_pop", "cdd_pop", "wbal_pop", "rx1d_pop", "r50_pop"]
-    if all(col in data.columns for col in pop_cols):
-        pp = pd.DataFrame(index=data.index)
-        pp["hd35"] = percentile_rank(data["hd35_pop"])
-        pp["tr25"] = percentile_rank(data["tr25_pop"])
-        pp["cdd"] = percentile_rank(data["cdd_pop"])
-        pp["wbal"] = percentile_rank(-data["wbal_pop"])
-        pp["rx1d"] = percentile_rank(data["rx1d_pop"])
-        pp["r50"] = percentile_rank(data["r50_pop"])
-        data["hazard_popclimate"] = pp.mean(axis=1)
-
     return data
-
-
-def _pca_hazard(indicators: pd.DataFrame) -> pd.Series:
-    """First principal component of the hazard indicators.
-
-    PCA finds the single direction that explains the most variation. We use
-    it as a data-driven alternative to equal weights. The sign is fixed so
-    that higher values always mean "more hazard".
-    """
-    x = indicators.dropna()
-    if len(x) < 10:
-        return pd.Series(np.nan, index=indicators.index)
-
-    # Standardise because the indicators have different variances.
-    z = (x - x.mean()) / x.std(ddof=0)
-    # SVD is a stable way to get principal components without extra packages.
-    u, s, vt = np.linalg.svd(z.to_numpy(), full_matrices=False)
-    component = u[:, 0] * s[0]
-
-    # Flip the component if it points the "wrong" way.
-    if np.corrcoef(component, z.mean(axis=1).to_numpy())[0, 1] < 0:
-        component = -component
-
-    scores = pd.Series(component, index=x.index)
-    return percentile_rank(scores).reindex(indicators.index)
 
 
 # ---------------------------------------------------------------------------
@@ -121,11 +85,15 @@ def _pca_hazard(indicators: pd.DataFrame) -> pd.Series:
 
 def build_exposure(point_year: pd.DataFrame, point_pop: pd.DataFrame,
                    points: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    """Build exposure measures from point-level population and climate.
+    """Extra heat measures that use population and climate together.
 
-    person_days_heat is the headline exposure measure: if a point has
-    100,000 people and 40 heat days per year, it contributes 4,000,000
-    person-days of extreme heat.
+    These columns are descriptive only: they are shown in the maps and the
+    dashboard, but they are NOT used in the risk index. (The index already
+    counts heat in the hazard score; using heat again in the exposure score
+    would count it twice.)
+
+    Example: a point with 100,000 people and 40 heat days per year gives
+    4,000,000 person-days of extreme heat.
     """
     # Average heat days over the baseline period for every sample point.
     baseline = point_year[
@@ -209,31 +177,38 @@ def combine(inputs: dict, cfg: dict) -> pd.DataFrame:
         .merge(vulnerability, on="region_id", how="left")
     )
 
-    # Exposure as a 0-1 score. We use the log of person-days because a few
-    # very large regions (Uttar Pradesh, California) would otherwise dominate.
-    master["exposure_score"] = percentile_rank(np.log1p(master["person_days_heat"]))
+    # Exposure = how many people live in the region, as a 0-1 score.
+    # We use population only (not population x heat days) because heat is
+    # already inside the hazard score.
+    master["exposure_score"] = percentile_rank(master["population"])
 
-    # The three risk versions.
+    # Main risk index (product, IPCC idea).
     master["risk_equal"] = (
         master["hazard_equal"] * master["exposure_score"] * master["vulnerability"]
     )
+
+    # Two other versions, used only to check that the ranking is stable:
+    # - additive: the simple mean of the three scores;
+    # - per_person: hazard x vulnerability, without population. Big regions
+    #   always have a high exposure score, so this version shows which
+    #   regions are risky for each person living there, whatever their size.
     master["risk_additive"] = master[
         ["hazard_equal", "exposure_score", "vulnerability"]
     ].mean(axis=1)
-    master["risk_pca"] = (
-        master["hazard_pca"] * master["exposure_score"] * master["vulnerability"]
-    )
-    if "hazard_popclimate" in master.columns:
-        master["risk_popclimate"] = (
-            master["hazard_popclimate"] * master["exposure_score"] * master["vulnerability"]
-        )
+    master["risk_per_person"] = master["hazard_equal"] * master["vulnerability"]
 
     # Ranks (1 = highest risk).
-    for column in ["risk_equal", "risk_additive", "risk_pca", "risk_popclimate"]:
-        if column in master.columns:
-            master[column.replace("risk", "rank")] = master[column].rank(
-                ascending=False, method="min"
-            )
+    for version in VERSIONS:
+        master[f"rank_{version}"] = master[f"risk_{version}"].rank(
+            ascending=False, method="min"
+        )
+
+    # Rank inside the country. The scores are computed on all regions
+    # together, so most Indian states rank above all US states. This rank
+    # shows which regions stand out inside their own country.
+    master["rank_in_country"] = master.groupby("iso3")["risk_equal"].rank(
+        ascending=False, method="min"
+    )
 
     # Flags that the analysis and the report can use.
     master["has_development"] = master["shdi"].notna()
@@ -253,10 +228,8 @@ def run() -> pd.DataFrame:
 
     # A long table of the risk versions makes the robustness analysis simple.
     versions = []
-    for version in ["equal", "additive", "pca", "popclimate"]:
+    for version in VERSIONS:
         column = f"risk_{version}"
-        if column not in master.columns:
-            continue
         part = master[["region_id", "iso3", "region_name", column]].copy()
         part["version"] = version
         part = part.rename(columns={column: "risk"})

@@ -148,8 +148,8 @@ def test_summary_page_builds_from_the_report_tables():
 
     assert "the summary" in page
     assert "the question" in page
-    assert "what we found" in page
-    assert "1.38" in page           # H1 concentration ratio
+    assert "the results" in page
+    assert "(H2)" in page           # every hypothesis has a finding
     assert "0.786" in page          # median SHDI, high hazard
     assert "0.936" in page          # median SHDI, low hazard
     assert "/report.pdf" in page
@@ -163,8 +163,8 @@ def test_summary_page_has_a_french_version():
     page = build_summary_html(lang="fr")
 
     assert "la synthèse" in page
-    assert "ce que nous avons trouvé" in page
-    assert "1,38" in page           # French decimal comma
+    assert "les résultats" in page
+    assert "0,936" in page          # French decimal comma
     assert "0,786" in page
     assert "/report/fr.pdf" in page
     assert "lang-globe" in page
@@ -188,7 +188,7 @@ def test_summary_and_report_routes_respond():
 
     summary = client.get("/summary")
     assert summary.status_code == 200
-    assert b"the statistical report" in summary.data
+    assert b"of the report." in summary.data
 
     report = client.head("/report")
     assert report.status_code == 200

@@ -89,8 +89,8 @@ CREATE TABLE IF NOT EXISTS fact_development (
 -- ---------------------------------------------------------------------------
 -- Composite risk
 --
--- index_version lets us keep more than one weighting scheme (for example
--- "v1_equal" and "v1_pca") and compare them in the robustness section.
+-- index_version keeps the three versions of the index: "v1_equal" (main),
+-- "v1_additive" and "v1_per_person" (robustness checks).
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS fact_risk (

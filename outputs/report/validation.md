@@ -11,4 +11,4 @@
 - `PASS` **index bounds** - all index columns within 0..1
 - `PASS` **master table** - 105 rows, 0 duplicates, 0 regions missing
 - `PASS` **development coverage** - SHDI available for 99/105 regions (94%)
-- `PASS` **output tables** - 9 tables present
+- `PASS` **output tables** - 7 tables present

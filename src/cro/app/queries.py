@@ -64,11 +64,11 @@ def load_data() -> gpd.GeoDataFrame:
     # once and reuse it until the analysis table changes. When the master
     # table is absent (a deployment that ships only the cache), the cache is
     # the best data we have, so use it.
-    cache_is_fresh = (
+    cache_is_fresh = cache.exists() and (
         not master_path.exists()
         or cache.stat().st_mtime >= master_path.stat().st_mtime
     )
-    if cache.exists() and cache_is_fresh:
+    if cache_is_fresh:
         log("dashboard: loaded simplified geometry cache")
         return load_geo_table(cache)
 

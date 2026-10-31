@@ -90,16 +90,22 @@ def build_facts(master: pd.DataFrame, climate: pd.DataFrame,
         "share_pop_high_heat", "high_heat_threshold",
     ]].copy()
 
-    risk = master[[
-        "region_id", "hazard_equal", "exposure_score", "vulnerability",
-        "risk_equal", "rank_equal",
-    ]].rename(columns={
-        "hazard_equal": "hazard",
-        "exposure_score": "exposure",
-        "risk_equal": "risk",
-        "rank_equal": "risk_rank",
-    })
-    risk["index_version"] = "v1_equal"
+    # One row per region and per index version, so the database keeps the
+    # main index ("v1_equal") and the two robustness versions.
+    risk_parts = []
+    for version in ["equal", "additive", "per_person"]:
+        part = master[[
+            "region_id", "hazard_equal", "exposure_score", "vulnerability",
+            f"risk_{version}", f"rank_{version}",
+        ]].rename(columns={
+            "hazard_equal": "hazard",
+            "exposure_score": "exposure",
+            f"risk_{version}": "risk",
+            f"rank_{version}": "risk_rank",
+        })
+        part["index_version"] = f"v1_{version}"
+        risk_parts.append(part)
+    risk = pd.concat(risk_parts, ignore_index=True)
 
     return {
         "dim_country": countries,

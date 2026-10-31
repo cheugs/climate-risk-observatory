@@ -231,16 +231,16 @@ TEXTS: dict[str, tuple[str, str]] = {
 
     "measure.exposure.chip": ("exposure", "exposition"),
     "measure.exposure.label": (
-        "exposure to extreme heat", "exposition à la chaleur extrême",
+        "exposure (population)", "exposition (population)",
     ),
-    "measure.exposure.axis": ("person-days of heat", "jours-personnes de chaleur"),
-    "measure.exposure.low": ("lower exposure", "exposition plus faible"),
-    "measure.exposure.high": ("higher exposure", "exposition plus forte"),
+    "measure.exposure.axis": ("people", "habitants"),
+    "measure.exposure.low": ("fewer people", "moins d'habitants"),
+    "measure.exposure.high": ("more people", "plus d'habitants"),
     "measure.exposure.rank_title": (
-        "the largest heat exposure", "la plus forte exposition à la chaleur",
+        "the most people", "le plus d'habitants",
     ),
     "measure.exposure.top_label": (
-        "Largest heat exposure", "Plus forte exposition à la chaleur",
+        "Most people", "Le plus d'habitants",
     ),
 
     "measure.vulnerability.chip": ("vulnerability", "vulnérabilité"),
@@ -302,8 +302,8 @@ TEXTS: dict[str, tuple[str, str]] = {
         "internes. ",
     ),
     "map.note_log": (
-        "Exposure is coloured on a log scale. ",
-        "L'exposition est colorée sur une échelle logarithmique. ",
+        "Population is coloured on a log scale. ",
+        "La population est colorée sur une échelle logarithmique. ",
     ),
     "map.note_us": (
         "The US panel shows the continental states; Alaska, Hawai\u02bbi and the "
@@ -324,56 +324,56 @@ TEXTS: dict[str, tuple[str, str]] = {
     # --- relationship ---------------------------------------------------
     "relation.title": ("the relationship.", "la relation."),
     "relation.desc": (
-        "Hazard against development. The dashed lines mark the study medians; "
-        "the ring marks the region you selected.",
-        "L'aléa face au développement. Les pointillés marquent les médianes de "
-        "l'étude ; le cercle désigne la région sélectionnée.",
+        "Hazard against development. The dotted lines are the medians; the ring "
+        "is the region you selected.",
+        "L'aléa face au développement. Les pointillés sont les médianes ; le "
+        "cercle est la région sélectionnée.",
     ),
     "relation.caption": (
-        "Each dot is one admin-1 region. High SHDI sits high on the y-axis; high "
-        "hazard sits to the right. The pattern runs downward: more hazard, less "
-        "development.",
-        "Chaque point est une région admin-1. Un IDH élevé se situe haut sur l'axe "
-        "vertical, un aléa élevé à droite. La tendance descend : plus d'aléa, "
-        "moins de développement.",
+        "Each dot is one region. High SHDI is at the top, high hazard is on the "
+        "right. There is one line per country: the lines go down, but much less "
+        "than the big gap between India and the two other countries.",
+        "Chaque point est une région. Un IDH élevé est en haut, un aléa élevé à "
+        "droite. Il y a une droite par pays : elles descendent, mais beaucoup "
+        "moins que le grand écart entre l'Inde et les deux autres pays.",
     ),
     "relation.finding": (
-        "Spearman rank correlation between climate hazard and SHDI, across the "
-        "99 regions with development data.",
-        "Corrélation de rang de Spearman entre l'aléa climatique et l'IDH, sur les "
-        "99 régions disposant de données de développement.",
+        "Spearman correlation between climate hazard and SHDI, on the 99 "
+        "regions with development data.",
+        "Corrélation de Spearman entre l'aléa climatique et l'IDH, sur les 99 "
+        "régions qui ont des données de développement.",
     ),
     "relation.medians": ("medians", "médianes"),
     "relation.medians_text": (
-        "SHDI 0.786 in high-hazard regions vs 0.936 in low-hazard regions "
-        "(Mann-Whitney p = 1.4e-06).",
-        "IDH 0,786 dans les régions à fort aléa contre 0,936 dans celles à faible "
-        "aléa (Mann-Whitney p = 1,4e-06).",
+        "SHDI {median_high} in the more hazardous half vs {median_low} in the "
+        "other half ({p_value}).",
+        "IDH {median_high} dans la moitié la plus exposée contre {median_low} "
+        "dans l'autre moitié ({p_value}).",
     ),
     "relation.within": ("within", "à l'intérieur"),
     "relation.within_text": (
-        "A one-SD rise in hazard goes with -0.21 SD of SHDI inside countries "
-        "(95% CI -0.32 to -0.11).",
-        "Une hausse d'un écart-type de l'aléa correspond à −0,21 écart-type d'IDH "
-        "à l'intérieur des pays (IC à 95 % : −0,32 à −0,11).",
+        "With a country effect, the regression coefficient goes from {beta_all} "
+        "to {beta} (95% CI {beta_low} to {beta_high}).",
+        "Avec un effet pays, le coefficient de régression passe de {beta_all} à "
+        "{beta} (IC à 95 % : {beta_low} à {beta_high}).",
     ),
     "relation.by_country": ("by country", "par pays"),
     "relation.by_country_text": (
-        "Slope -0.22 in India, -0.14 in the USA and +0.01 in France, where hazard "
-        "range is narrow.",
-        "Pente de −0,22 en Inde, −0,14 aux États-Unis et +0,01 en France, où la "
-        "plage d'aléa est étroite.",
+        "Spearman correlation {rho_ind} in India, {rho_usa} in the USA and "
+        "{rho_fra} in France (not significant, only 13 regions).",
+        "Corrélation de Spearman de {rho_ind} en Inde, {rho_usa} aux États-Unis "
+        "et {rho_fra} en France (non significative, 13 régions seulement).",
     ),
-    "relation.concentration": ("concentration", "concentration"),
-    "relation.concentration_text": (
-        "The top 10% most hazardous regions hold 1.38x their population share of "
-        "person-days of heat.",
-        "Les 10 % de régions les plus exposées à l'aléa concentrent 1,38 fois leur "
-        "part de population en jours-personnes de chaleur.",
+    "relation.stability": ("stability", "stabilité"),
+    "relation.stability_text": (
+        "Across three versions of the index, at least {min_top10} of the top 10 "
+        "regions stay the same (rank correlation at least {min_rho}).",
+        "Entre trois versions de l'indice, au moins {min_top10} des 10 premières "
+        "régions restent les mêmes (corrélation des rangs d'au moins {min_rho}).",
     ),
     "relation.axis_x": ("Climate hazard index (0-1)", "Indice d'aléa climatique (0-1)"),
     "relation.axis_y": ("Subnational HDI (SHDI)", "IDH infranational (IDH-S)"),
-    "relation.trend": ("trend (LOWESS)", "tendance (LOWESS)"),
+    "relation.trend": ("trend in the country", "tendance dans le pays"),
     "relation.selected": ("selected", "sélection"),
     "relation.empty": (
         "No development data for this view.",
@@ -449,82 +449,72 @@ TEXTS: dict[str, tuple[str, str]] = {
     "method.hazard_text": (
         "Six climate measures from NASA POWER daily data (1991-2023): days above "
         "35 C, tropical nights, the longest dry spell, water balance, the heaviest "
-        "one-day rainfall and very wet days. Each is converted to a percentile, "
-        "combined into heat, dry and wet sub-indices, then averaged.",
+        "one-day rain and very wet days. Each one becomes a rank from 0 to 1. We "
+        "average them into heat, dry and wet scores, then average the three.",
         "Six mesures climatiques issues des données quotidiennes NASA POWER "
         "(1991-2023) : jours au-dessus de 35 °C, nuits tropicales, plus longue "
-        "séquence sèche, bilan hydrique, plus forte pluie en un jour et jours très "
-        "humides. Chacune est convertie en centile, combinée en sous-indices "
-        "chaleur, sécheresse et humidité, puis moyennée.",
+        "période sèche, bilan hydrique, plus forte pluie en un jour et jours très "
+        "pluvieux. Chacune devient un rang de 0 à 1. On fait la moyenne en scores "
+        "chaleur, sec et humide, puis la moyenne des trois.",
     ),
     "method.exposure_title": ("02 / exposure", "02 / exposition"),
     "method.exposure_text": (
-        "GHS-POP 2020 population at 30 arc-seconds. Each person is assigned to the "
-        "nearest climate sample point, so person-days of extreme heat = population "
-        "x heat days. This is why a hot but empty region does not rank like a hot "
-        "and crowded one.",
-        "Population GHS-POP 2020 à 30 secondes d'arc. Chaque personne est rattachée "
-        "au point climatique le plus proche, si bien que les jours-personnes de "
-        "chaleur extrême = population × jours de chaleur. C'est pourquoi une région "
-        "chaude mais vide ne se classe pas comme une région chaude et dense.",
+        "The number of people living in the region (GHS-POP 2020), as a rank from "
+        "0 to 1. Heat is not used here because it is already in the hazard score.",
+        "Le nombre d'habitants de la région (GHS-POP 2020), sous forme de rang de "
+        "0 à 1. La chaleur n'est pas utilisée ici, car elle est déjà dans l'aléa.",
     ),
     "method.vulnerability_title": ("03 / vulnerability", "03 / vulnérabilité"),
     "method.vulnerability_text": (
-        "One minus the percentile rank of the subnational Human Development Index "
-        "(Global Data Lab). Regions without an SHDI keep their hazard and exposure "
-        "scores but are left out of the development models.",
-        "Un moins le rang centile de l'indice de développement humain "
-        "infranational (Global Data Lab). Les régions sans IDH conservent leurs "
-        "scores d'aléa et d'exposition mais sont exclues des modèles de "
-        "développement.",
+        "1 minus the rank of the Subnational Human Development Index (Global Data "
+        "Lab). Regions without SHDI have no risk score and are not in the tests.",
+        "1 moins le rang de l'indice de développement humain infranational "
+        "(Global Data Lab). Les régions sans IDH n'ont pas de score de risque et "
+        "ne sont pas dans les tests.",
     ),
     "method.risk_title": ("04 / risk", "04 / risque"),
     "method.risk_text": (
-        "Composite risk = hazard x exposure x vulnerability, following the IPCC "
-        "framing. An additive version and a PCA-weighted version are kept as "
-        "robustness checks; the regional ordering barely moves between them.",
-        "Risque composite = aléa × exposition × vulnérabilité, selon le cadre du "
-        "GIEC. Une version additive et une version pondérée par ACP sont "
-        "conservées comme tests de robustesse ; l'ordre des régions change à "
-        "peine d'une version à l'autre.",
+        "Risk = hazard x exposure x vulnerability (IPCC idea). Two other versions "
+        "check the ranking: a simple mean, and a version without population "
+        "(hazard x vulnerability). The top regions stay almost the same.",
+        "Risque = aléa × exposition × vulnérabilité (idée du GIEC). Deux autres "
+        "versions vérifient le classement : une moyenne simple, et une version "
+        "sans la population (aléa × vulnérabilité). Les premières régions restent "
+        "presque les mêmes.",
     ),
     "method.statistics_title": ("05 / statistics", "05 / statistiques"),
     "method.statistics_text": (
-        "Mann-Whitney tests, Cliff's delta and Spearman correlation for the "
-        "development relationship; country fixed effects for the regression; "
-        "Moran's I and LISA for spatial clustering. Full tables are in the report.",
-        "Tests de Mann-Whitney, delta de Cliff et corrélation de Spearman pour la "
-        "relation avec le développement ; effets fixes pays pour la régression ; "
-        "I de Moran et LISA pour l'agrégation spatiale. Les tableaux complets sont "
-        "dans le rapport.",
+        "Spearman correlation (all regions and country by country), a linear "
+        "regression with and without a country effect, and a rank comparison of "
+        "the three index versions. Full tables are in the report.",
+        "Corrélation de Spearman (toutes les régions et pays par pays), régression "
+        "linéaire avec et sans effet pays, et comparaison des rangs des trois "
+        "versions de l'indice. Les tableaux complets sont dans le rapport.",
     ),
     "method.scope_title": ("06 / scope", "06 / périmètre"),
     "method.scope_text": (
         "Pilot of 105 admin-1 regions in France, India and the United States. The "
-        "pipeline is written to scale to roughly 3,700 regions worldwide without "
-        "changing the index definition.",
+        "same code can run on more countries by changing the config file.",
         "Pilote de 105 régions admin-1 en France, en Inde et aux États-Unis. Le "
-        "pipeline est écrit pour passer à environ 3 700 régions dans le monde sans "
-        "changer la définition de l'indice.",
+        "même code peut tourner sur d'autres pays en changeant le fichier de "
+        "configuration.",
     ),
     "methods.caveat_title": (
         "Read this before quoting a number",
         "À lire avant de citer un chiffre",
     ),
     "methods.caveat_text": (
-        "These are associations, not causal effects. Climate, history, "
-        "institutions and geography are entangled, and this pilot cannot separate "
-        "them. Development data are missing for 6 of the 105 regions, so "
-        "development tests use 99. Boundaries are ADM1 units, not lived "
-        "neighbourhoods; a large region can hide a hot city. Use the ranking as a "
-        "screening tool, not a verdict.",
-        "Ce sont des associations, pas des effets causaux. Climat, histoire, "
-        "institutions et géographie sont enchevêtrés, et ce pilote ne peut pas les "
-        "séparer. Les données de développement manquent pour 6 des 105 régions : "
-        "les tests de développement portent donc sur 99 régions. Les limites sont "
-        "des unités ADM1, pas des quartiers vécus ; une grande région peut cacher "
-        "une ville surchauffée. Utilisez le classement comme un outil de "
-        "repérage, pas comme un verdict.",
+        "These are links, not causes: climate, history and the economy are mixed "
+        "together. SHDI is missing for 6 of the 105 regions, so the tests use 99. "
+        "Neighbouring regions look alike, so the p-values are probably too small. "
+        "A big region can hide a very hot city. Use the ranking to know where to "
+        "look first, not as a verdict.",
+        "Ce sont des liens, pas des causes : le climat, l'histoire et l'économie "
+        "sont mélangés. L'IDH manque pour 6 des 105 régions, donc les tests en "
+        "utilisent 99. Les régions voisines se ressemblent, donc les p-values sont "
+        "sans doute trop petites. Une grande région peut cacher une ville très "
+        "chaude. Le classement dit où regarder en premier ; ce n'est pas un "
+        "verdict.",
     ),
 
     # --- closing band ---------------------------------------------------
@@ -532,8 +522,8 @@ TEXTS: dict[str, tuple[str, str]] = {
     "next.title": ("the written argument.", "l'argument écrit."),
     "next.summary_title": ("two-minute summary", "synthèse en deux minutes"),
     "next.summary_meta": (
-        "the question, four findings, limits",
-        "la question, quatre constats, les limites",
+        "the question, four results, limits",
+        "la question, quatre résultats, les limites",
     ),
     "next.report_title": ("full report \u2197", "rapport complet \u2197"),
     "next.report_meta": ("html \u00b7 opens in this tab", "html \u00b7 s'ouvre dans cet onglet"),
@@ -542,8 +532,8 @@ TEXTS: dict[str, tuple[str, str]] = {
 
     # --- footer ---------------------------------------------------------
     "footer.line": (
-        "climate risk & human development observatory \u00b7 pilot edition",
-        "observatoire du risque climatique & du développement humain \u00b7 édition pilote",
+        "climate risk & human development observatory \u00b7 pilot project",
+        "observatoire du risque climatique & du développement humain \u00b7 projet pilote",
     ),
     "footer.stack": ("python \u00b7 postgis \u00b7 plotly", "python \u00b7 postgis \u00b7 plotly"),
 }

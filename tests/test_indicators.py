@@ -177,3 +177,36 @@ def test_missing_development_stays_missing():
 
     result = build_vulnerability(development).set_index("region_id")
     assert pd.isna(result.loc["b", "vulnerability"])
+
+
+# ---------------------------------------------------------------------------
+# Statistics
+# ---------------------------------------------------------------------------
+
+def test_h1_finds_a_negative_link_on_toy_data():
+    """More hazard and less SHDI must give a negative Spearman correlation."""
+    from cro.analysis.tests import hazard_development_test
+
+    data = pd.DataFrame({
+        "hazard_equal": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+        "shdi": [0.95, 0.90, 0.85, 0.80, 0.75, 0.70],
+    })
+    result = hazard_development_test(data, "toy")
+
+    assert result["spearman_rho"] == pytest.approx(-1.0)
+    assert result["median_shdi_high_hazard"] < result["median_shdi_low_hazard"]
+
+
+def test_rank_stability_counts_the_shared_top_regions():
+    """Two identical rankings must have rho = 1 and share their whole top 10."""
+    from cro.analysis.tests import test_rank_stability as rank_stability
+
+    ranks = list(range(1, 13))
+    versions = pd.concat([
+        pd.DataFrame({"region_id": [f"r{i}" for i in ranks], "rank": ranks, "version": "a"}),
+        pd.DataFrame({"region_id": [f"r{i}" for i in ranks], "rank": ranks, "version": "b"}),
+    ])
+    result = rank_stability(versions)
+
+    assert result.loc[0, "spearman_rho"] == pytest.approx(1.0)
+    assert result.loc[0, "same_in_top10"] == 10

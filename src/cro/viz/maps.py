@@ -16,8 +16,6 @@ from pathlib import Path
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
 from matplotlib.patches import Patch
@@ -84,54 +82,6 @@ def indicator_map(gdf: gpd.GeoDataFrame, column: str, title: str, cmap: str,
     theme.save_figure(fig, path, note=note)
 
 
-def lisa_map(gdf: gpd.GeoDataFrame, path: Path, note: str | None = None) -> None:
-    """Four-panel map of significant local clusters (LISA)."""
-    theme.apply_style()
-
-    # Reading a Parquet file does not always restore the GeoDataFrame class,
-    # and sometimes the geometry arrives as raw WKB bytes. Repair both cases
-    # so this function also works when called directly (e.g. from a test).
-    if isinstance(gdf["geometry"].iloc[0], (bytes, bytearray)):
-        gdf = gdf.copy()
-        gdf["geometry"] = gpd.GeoSeries.from_wkb(gdf["geometry"], crs="EPSG:4326")
-    if not isinstance(gdf, gpd.GeoDataFrame):
-        gdf = gpd.GeoDataFrame(gdf, geometry="geometry", crs="EPSG:4326")
-
-    fig, axes = plt.subplots(1, 3, figsize=(17, 5.2))
-
-    for ax, iso3 in zip(axes, COUNTRY_ORDER):
-        data = _panel_data(gdf, iso3)
-        # Draw the base map first so regions with no cluster still appear.
-        data.plot(ax=ax, color="#f2f2f2", edgecolor="white", linewidth=0.3)
-
-        for cluster, color in theme.LISA_COLORS.items():
-            subset = data[data["cluster"] == cluster]
-            if subset.empty:
-                continue
-            subset.plot(ax=ax, color=color, edgecolor="white", linewidth=0.3)
-
-        ax.set_xlim(DISPLAY_BOUNDS[iso3][0], DISPLAY_BOUNDS[iso3][2])
-        ax.set_ylim(DISPLAY_BOUNDS[iso3][1], DISPLAY_BOUNDS[iso3][3])
-        ax.set_aspect("equal")
-        ax.axis("off")
-        ax.set_title(COUNTRY_NAMES[iso3], loc="left")
-
-    legend = [
-        Patch(facecolor=theme.LISA_COLORS["HH"], label="High-high (hotspot)"),
-        Patch(facecolor=theme.LISA_COLORS["LL"], label="Low-low (cold spot)"),
-        Patch(facecolor=theme.LISA_COLORS["HL"], label="High-low (outlier)"),
-        Patch(facecolor=theme.LISA_COLORS["LH"], label="Low-high (outlier)"),
-        Patch(facecolor=theme.LISA_COLORS["not significant"], label="Not significant"),
-        Patch(facecolor=theme.LISA_COLORS["no neighbours"], label="No neighbours"),
-    ]
-    fig.legend(handles=legend, loc="lower center", ncol=6, fontsize=8,
-               bbox_to_anchor=(0.5, -0.02))
-
-    fig.suptitle("Local clusters of the composite risk index", x=0.01, ha="left",
-                 fontsize=15, fontweight="bold")
-    theme.save_figure(fig, path, note=note)
-
-
 def double_exposure_map(master: gpd.GeoDataFrame, path: Path) -> None:
     """Map regions that are both high hazard and low development.
 
@@ -185,8 +135,7 @@ def double_exposure_map(master: gpd.GeoDataFrame, path: Path) -> None:
     theme.save_figure(fig, path)
 
 
-def plot_all(master: gpd.GeoDataFrame, lisa: gpd.GeoDataFrame,
-             maps_dir: Path) -> list[Path]:
+def plot_all(master: gpd.GeoDataFrame, maps_dir: Path) -> list[Path]:
     """Create every static map and return the file paths."""
     maps_dir.mkdir(parents=True, exist_ok=True)
     outputs = []
@@ -209,14 +158,16 @@ def plot_all(master: gpd.GeoDataFrame, lisa: gpd.GeoDataFrame,
          "wet sub-index (0-1)", "map_04_wet.png", 0, 1),
         ("hd35_area", "Days above 35 C", "YlOrRd",
          "days per year (2004-2023 mean)", "map_05_heat_days.png", None, None),
-        ("person_days_heat", "Population exposure to extreme heat", theme.CMAP_EXPOSURE,
-         "person-days above 35 C per year", "map_06_exposure.png", None, None),
+        ("exposure_score", "Exposure (population)", theme.CMAP_EXPOSURE,
+         "exposure score (0-1, percentile of population)", "map_06_exposure.png", 0, 1),
         ("shdi", "Subnational Human Development Index", theme.CMAP_DEVELOPMENT,
          "SHDI (latest year)", "map_07_shdi.png", None, None),
         ("vulnerability", "Vulnerability (1 - development score)", "viridis_r",
          "vulnerability (0-1)", "map_08_vulnerability.png", 0, 1),
         ("risk_equal", "Composite climate risk", theme.CMAP_RISK,
          "risk index (0-1, higher = more risk)", "map_09_risk.png", 0, 1),
+        ("risk_per_person", "Risk without population (hazard x vulnerability)",
+         theme.CMAP_RISK, "risk per person (0-1)", "map_10_risk_per_person.png", 0, 1),
     ]
 
     for column, title, cmap, label, filename, vmin, vmax in specs:
@@ -224,12 +175,6 @@ def plot_all(master: gpd.GeoDataFrame, lisa: gpd.GeoDataFrame,
             continue
         path = maps_dir / filename
         indicator_map(gdf, column, title, cmap, path, label, vmin=vmin, vmax=vmax)
-        outputs.append(path)
-
-    lisa_risk = lisa[lisa["variable"] == "risk_equal"].copy()
-    if not lisa_risk.empty:
-        path = maps_dir / "map_10_lisa.png"
-        lisa_map(lisa_risk, path)
         outputs.append(path)
 
     path = maps_dir / "map_11_double_exposure.png"

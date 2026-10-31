@@ -7,16 +7,11 @@ project:
   name: "Climate Risk & Human Development Observatory"
   version: "0.1.0"
 
-  # Phase 1 pilot countries.
-  # We test the whole pipeline on three very different countries before
-  # running it for the whole world: a rich temperate country with huge
-  # internal differences (USA), a rich European country with overseas
-  # territories (FRA), and a lower-middle-income tropical country with
-  # strong heat exposure (IND).
+  # Pilot countries. They are very different on purpose: a rich temperate
+  # country (FRA), a rich and very large country with many climates (USA),
+  # and a lower-middle-income hot country (IND).
+  # To run on more countries, list them here (["ALL"] means every country).
   pilot_iso3: ["FRA", "USA", "IND"]
-
-  # The second phase will use this list instead (["ALL"] means every country).
-  global_iso3: ["ALL"]
 
 climate:
   # --- How the climate is sampled inside each region ---
@@ -30,10 +25,6 @@ climate:
   # NASA POWER requests are small, so we can run a few in parallel.
   # Four threads is polite and still finishes the pilot quickly.
   workers: 4
-
-  # Size of the box around a sample point used to count the population
-  # that the point represents (in degrees).
-  point_population_radius: 0.25
 
   # Full history we download from NASA POWER (MERRA-2 based).
   history_start: "1991-01-01"
@@ -62,17 +53,12 @@ population:
   min_population: 1000
 
 analysis:
-  # A country needs at least this many regions before it can be used in a
-  # within-country (fixed effects) model.
+  # A country needs at least this many regions before we fit the
+  # hazard-SHDI line inside it (H2, one regression per country).
   min_regions_per_country: 5
 
-  # Bootstrap repetitions for confidence intervals.
-  bootstrap_iterations: 2000
-  random_seed: 42
-
-  # Significance levels.
+  # Significance level used in the report.
   alpha: 0.05
-  fdr_alpha: 0.05
 
 database:
   # These match docker-compose.yml.
