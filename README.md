@@ -28,6 +28,23 @@ These results are **associations, not causes**.
 
 ---
 
+## Technologies
+
+| Area | Tools |
+|---|---|
+| Language | Python 3.10+ |
+| Data processing | Pandas, NumPy, PyArrow (Parquet) |
+| Geospatial | GeoPandas, Shapely, PyProj, Rasterio |
+| Statistics | SciPy (Spearman correlation), Statsmodels (OLS regression, HC3 robust errors) |
+| Database | PostgreSQL + PostGIS (Docker), SQLAlchemy, GeoAlchemy2 |
+| Maps and charts | Plotly, Matplotlib, Kaleido |
+| Dashboard | Plotly Dash, Dash Bootstrap Components |
+| Report | Quarto (HTML + PDF, English and French), Jupyter notebook |
+| Testing | pytest |
+| Deployment | Docker, Docker Compose, Render |
+
+---
+
 ## How the index is built
 
 Each indicator is turned into a **percentile rank** between 0 and 1, so we can mix days,
