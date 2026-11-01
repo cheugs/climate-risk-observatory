@@ -2,21 +2,57 @@
 
 [Français](README.md) | **English**
 
-Author: **Chengho Fongang Marie Louise**
-
 **Are the regions with the most extreme climate also the regions with the lowest human development?**
 
-This project is a data pipeline in Python. It downloads open data on climate, population and
-human development, builds a climate risk index for each region, tests three hypotheses, and
-shows the results in maps, a written report (English and French) and a web dashboard.
+Project by **Chengho Fongang Marie Louise**.
 
-The pilot covers **105 admin-1 regions** (states, provinces, regions) in **France, India and the
-United States**, about 1.8 billion people. The same code can run on other countries by changing
-the configuration file.
+105 regions in France, India and the United States (1.8 billion people), real public data (NASA,
+World Bank, European Commission, Global Data Lab) and three hypotheses tested statistically.
+
+**[Live dashboard](https://climate-risk-observatory.onrender.com)** ·
+**[Step-by-step notebook](notebooks/exploration.ipynb)** ·
+**[Full report](outputs/report/report.pdf)**
+
+![Climate hazard and human development: one line per country](outputs/figures/fig_01_hazard_vs_development.png)
+
+*Each dot is a region. Further right means a more extreme climate; higher up means higher
+development.*
 
 ---
 
-## Main results
+## Key findings
+
+- **The regions most exposed to climate are less developed.** The median development index is 0.79
+  in the more exposed half, compared with 0.94 in the less exposed half.
+- **Most of the gap is between countries, not inside them.** When each region is compared only
+  with regions of its own country, the link is about four times weaker.
+- **Inside countries, the link exists in India and the USA, but not in France.** It is moderate in
+  the first two and absent in France (only 13 regions, so the result is uncertain).
+- **All ten highest-risk regions are in India**, led by Bihar, Uttar Pradesh and Madhya Pradesh.
+- **The ranking is solid.** Three different formulas for the index give at least 9 of the same top
+  10 regions.
+- **Why it matters:** the index shows where adaptation funding would protect the most vulnerable
+  people, both across countries and inside each one.
+
+These are **associations, not causes**.
+
+---
+
+## Skills shown
+
+| Skill | In this project |
+|---|---|
+| Data collection | 5 public sources through APIs and downloads, with caching and checks (NASA POWER, World Bank, GHS-POP, geoBoundaries, Global Data Lab) |
+| Geospatial analysis | Regional polygons, population rasters, climate sample points (GeoPandas, Rasterio, PostGIS) |
+| Indicator design | Composite index risk = hazard x exposure x vulnerability, following the IPCC framework |
+| Statistics and hypothesis testing | Spearman correlations, regressions with country effects, robustness checks (SciPy, Statsmodels) |
+| Visualisation and dashboard | 11 maps, 6 charts, interactive web dashboard (Matplotlib, Plotly Dash) |
+| Engineering and quality | Reproducible one-command pipeline, 33 automated tests, 8 data checks, Docker, online deployment |
+| Communication | Report in English and French, teaching notebook, limitations explained honestly |
+
+---
+
+## Detailed results
 
 | Hypothesis | Result |
 |---|---|
@@ -24,32 +60,15 @@ the configuration file.
 | **H2.** This is still true inside each country | Yes, but smaller: the hazard coefficient goes from **-0.39** to **-0.10** (95% CI -0.14 to -0.06) when we add a country effect. Clear in India and the USA, not in France. |
 | **H3.** The ranking is stable when we change the index formula | Yes: the three versions have rank correlations of at least **0.86**, and at least **9 of the top 10** regions are the same. |
 
-All ten highest-risk regions are in India (Bihar, Uttar Pradesh, Madhya Pradesh...). Inside
-their own country, the highest-risk regions are Texas, Alabama and Louisiana (USA) and
+Inside their own country, the highest-risk regions are Texas, Alabama and Louisiana (USA) and
 Auvergne-Rhône-Alpes, Occitanie and Nouvelle-Aquitaine (France).
 
-These results are **associations, not causes**.
+**Why highlight -0.10 rather than -0.59?** The correlation on all regions looks the most striking,
+but it mostly mixes three very different countries. The coefficient with country effects only
+compares regions of the same country: it is the most honest number for a link between climate and
+development.
 
----
-
-## Technologies
-
-| Area | Tools |
-|---|---|
-| Language | Python 3.10+ |
-| Data processing | Pandas, NumPy, PyArrow (Parquet) |
-| Geospatial | GeoPandas, Shapely, PyProj, Rasterio |
-| Statistics | SciPy (Spearman correlation), Statsmodels (OLS regression, HC3 robust errors) |
-| Database | PostgreSQL + PostGIS (Docker), SQLAlchemy, GeoAlchemy2 |
-| Maps and charts | Plotly, Matplotlib, Kaleido |
-| Dashboard | Plotly Dash, Dash Bootstrap Components |
-| Report | Quarto (HTML + PDF, English and French), Jupyter notebook |
-| Testing | pytest |
-| Deployment | Docker, Docker Compose, Render |
-
----
-
-## How the index is built
+### How the index is built
 
 Each indicator is turned into a **percentile rank** between 0 and 1, so we can mix days,
 millimetres and index points.
@@ -75,7 +94,7 @@ Risk          = Hazard x Exposure x Vulnerability
   only a size effect).
 - `rank_in_country` gives the risk rank of each region inside its own country.
 
-## Statistical tests
+### Statistical tests
 
 | Hypothesis | Method | Code |
 |---|---|---|
@@ -83,19 +102,36 @@ Risk          = Hazard x Exposure x Vulnerability
 | H2 | Linear regression (OLS, HC3 robust errors): M1 `shdi ~ hazard`, M2 `shdi ~ hazard + country dummies`; the same line fitted in each country | `src/cro/analysis/regression.py` |
 | H3 | Spearman correlation between the rankings of the three versions + number of shared top-10 regions | `src/cro/analysis/tests.py` |
 
----
-
-## Walkthrough notebook
-
-`notebooks/exploration.ipynb` tells the story of the project step by step: the data, how the
-index is built, the maps and the three hypotheses. It imports the same functions as the
-pipeline (`src/cro/`) and only needs `data/processed/dashboard_regions.parquet`, which is in
-the repository, so it runs right after `git clone`. GitHub shows it with all its tables and
-charts. A French version is in `notebooks/exploration.fr.ipynb`.
+**Glossary.** *SHDI*: Subnational Human Development Index (health, education, income, from 0 to
+1). *Spearman rho*: correlation between two rankings, from -1 to 1. *95% CI*: the range that very
+probably contains the true value.
 
 ---
 
-## Quick start
+## Limitations and next steps
+
+1. **Association, not causation.** History, geography and the economy can explain both climate
+   and development.
+2. **Neighbouring regions are similar.** The tests treat regions as independent, so the p-values
+   are probably too small.
+3. **Small sample.** 99 regions with SHDI; France has only 13, so its results are uncertain.
+4. **One development indicator.** SHDI does not show inequality inside a region.
+5. **Fixed thresholds.** 35 C and 50 mm are choices; France has almost no days above 35 C.
+6. **Static population.** Population is for 2020; the climate mean is for 2004-2023.
+7. **Coarse sampling.** At most 8 climate points per region.
+8. **Pilot countries.** France, India and the USA were chosen because they are different, not
+   because they represent the world.
+
+**Next steps**
+
+- Use a spatial regression model, to account for the similarity between neighbours.
+- Add more countries: set `project.pilot_iso3` in `config/config.yaml` (for example `["ALL"]`).
+- Add a household income indicator to see inequality inside regions.
+- Test other heat thresholds (30 C, 40 C).
+
+---
+
+## How to run
 
 ```bash
 # 1. Environment
@@ -118,7 +154,8 @@ cro report
 cro app            # http://127.0.0.1:8050
 ```
 
-Each step can also be run alone:
+<details>
+<summary>All commands</summary>
 
 | Command | What it does |
 |---|---|
@@ -136,41 +173,23 @@ Each step can also be run alone:
 | `cro app` | Start the Plotly Dash dashboard |
 | `cro all` | Run ingest -> build -> analyze -> export in order |
 
----
+</details>
 
-## Dashboard
+**Tests:** `pytest -q` (index maths, checks on the real files, dashboard). `cro validate` checks the
+data (unique regions, geometry, population totals, physical ranges, scores between 0 and 1, SHDI
+coverage).
 
-`cro app` opens one scrolling page at <http://127.0.0.1:8050>:
+**Dashboard:** one page with the map, the ranking, the hazard vs SHDI relationship and a profile of
+one region; an **EN / FR** switch on every page. It reads PostGIS when it is running and the
+Parquet files otherwise. The live version runs on Render's free plan, so the first visit can take
+about a minute. Deployment: [docs/deploy.md](docs/deploy.md).
 
-- **the map** - one panel per country. Choose *all* to compare the three countries on one colour
-  scale, or one country to see its internal differences.
-- **the ranking** - the ten regions with the highest value of the chosen measure.
-- **the relationship** - hazard against SHDI, with one trend line per country and the H1/H2/H3
-  results next to it (read from the result tables, never typed by hand).
-- **one place** - the numbers of one region and its position compared with the others.
-- **methods & data** - how the index is built and its limits.
-
-Other pages on the same server:
-
-- `/summary` - a two-minute summary of the report (`/summary?lang=fr` in French)
-- `/report` and `/report.pdf` - the full report (`/report/fr` and `/report/fr.pdf` in French)
-- `/maps/map_web_risk.html` (and `hazard`, `exposure`, `shdi`) - interactive maps
-
-Every page has an **EN / FR** switch. The dashboard reads PostGIS when it is running and the
-Parquet files otherwise, so it works without Docker.
-
-## Deployment
-
-The app is live on Render's free plan: **<https://climate-risk-observatory.onrender.com>**.
-The free instance sleeps after 15 minutes without visitors, so the first request can take about
-a minute.
-
-`render.yaml` is the Render blueprint and `requirements-deploy.txt` lists only the packages the
-app needs. See **[docs/deploy.md](docs/deploy.md)** for the steps.
+**PostGIS (optional):** `docker compose up -d` then `cro load` creates a star schema
+(`dim_region`, `fact_climate`, `fact_risk`...) and the view `vw_region_profile` on port 5433.
 
 ---
 
-## Repository layout
+## Files
 
 ```
 config/config.yaml              all settings (countries, thresholds, years)
@@ -179,32 +198,18 @@ src/cro/features/build.py       hazard, exposure, vulnerability, risk versions
 src/cro/analysis/               descriptive tables, H1/H3 tests, H2 regression
 src/cro/viz/                    shared theme, static maps, charts, interactive maps
 src/cro/app/                    Dash dashboard + summary and report pages
-src/cro/app/i18n.py             all English/French texts of the dashboard
 src/cro/db/                     PostGIS schema and loader
 src/cro/report/                 report tables + Quarto rendering
 report/                         report.qmd / report.fr.qmd
 notebooks/exploration.ipynb     step-by-step walkthrough of the results (uses src/cro)
 notebooks/exploration.fr.ipynb  the same walkthrough in French
 tests/                          unit tests, data checks, dashboard tests
-data/processed/                 intermediate tables (Parquet)
-outputs/maps|figures|tables/    results
-outputs/report/                 report(.fr).html/.pdf, validation.md, key_results.md
+outputs/maps|figures|tables/    results (maps, charts, CSV tables)
+outputs/report/                 report(.fr).html/.pdf, key_results.md, validation.md
 ```
 
 `data/processed/region_master.parquet` is the one table that every output reads, so the maps,
-the tables and the dashboard always agree.
-
-### Output tables
-
-| File | Content |
-|---|---|
-| `t01_summary_by_country.csv` | means by country |
-| `t02_climate_by_country.csv` | climate indicators by country |
-| `t03_top_bottom_regions.csv` | highest and lowest risk regions |
-| `t05_hypothesis_tests.csv` | H1: Spearman correlation, all regions and by country |
-| `t06_rank_stability.csv` | H3: agreement between the three index versions |
-| `t07_regression_coefficients.csv` | H2: models M1 and M2 |
-| `t08_country_slopes.csv` | H2: slope in each country |
+the tables, the report and the dashboard always agree.
 
 ---
 
@@ -221,55 +226,9 @@ the tables and the dashboard always agree.
 NASA POWER does not give evapotranspiration, so we estimate it with the Hargreaves formula
 (Hargreaves & Samani, 1985) from daily minimum/maximum temperature and latitude.
 
----
+### Key references
 
-## Quality and tests
-
-- `cro validate` runs 8 data checks: unique regions, valid geometry, population totals, physical
-  ranges, scores between 0 and 1, SHDI coverage, master table and output tables.
-- `pytest -q` runs the tests:
-  - `tests/test_indicators.py` - the index maths and the statistical functions on small examples;
-  - `tests/test_data_contract.py` - checks on the real files (skipped before the pipeline runs);
-  - `tests/test_presentation.py` - maps, dashboard callbacks and pages.
-- The report and the dashboard read their numbers from the same CSV tables.
-
-## PostGIS (optional)
-
-```bash
-docker compose up -d
-cro load
-```
-
-This creates `dim_region`, `dim_country`, `fact_climate`, `fact_population`, `fact_exposure`,
-`fact_development`, `fact_risk` (one row per region and index version) and the view
-`vw_region_profile` on port **5433**.
-
----
-
-## Limitations
-
-1. **Association, not causation.** History, geography and the economy can explain both climate
-   and development.
-2. **Neighbouring regions are similar.** The tests treat regions as independent, so the p-values
-   are probably too small. A spatial regression model would be the next step.
-3. **Small sample.** 99 regions with SHDI; France has only 13, so its results are uncertain.
-4. **One development indicator.** SHDI does not show inequality inside a region.
-5. **Fixed thresholds.** 35 C and 50 mm are choices; France has almost no days above 35 C.
-6. **Static population.** Population is for 2020; the climate mean is for 2004-2023.
-7. **Coarse sampling.** At most 8 climate points per region.
-8. **Pilot countries.** France, India and the USA were chosen because they are different, not
-   because they represent the world.
-
-## Next steps
-
-- Add more countries: set `project.pilot_iso3` in `config/config.yaml` (for example `["ALL"]`).
-- Use a spatial regression model.
-- Add a household income indicator to see inequality inside regions.
-- Test other heat thresholds (30 C, 40 C).
-
-## Key references
-
-The full list is in the report. The main method choices follow:
+The full list is in the report.
 
 - **Risk = hazard x exposure x vulnerability:** Cardona et al. (2012), IPCC SREX chapter 2; IPCC (2014), AR5 WGII.
 - **Multiplicative risk index:** Marin-Ferrer, Vernaccini & Poljansek (2017), INFORM methodology (European Commission JRC).
