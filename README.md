@@ -1,274 +1,291 @@
-# Climate Risk & Human Development Observatory
+# Observatoire du risque climatique et du développement humain
 
-**Are the regions with the most extreme climate also the regions with the lowest human development?**
+**Français** | [English](README.en.md)
 
-This project is a data pipeline in Python. It downloads open data on climate, population and
-human development, builds a climate risk index for each region, tests three hypotheses, and
-shows the results in maps, a written report (English and French) and a web dashboard.
+Projet réalisé par **Chengho Fongang Marie Louise**
 
-The pilot covers **105 admin-1 regions** (states, provinces, regions) in **France, India and the
-United States**, about 1.8 billion people. The same code can run on other countries by changing
-the configuration file.
+**Les régions au climat le plus extrême sont-elles aussi les régions où le développement humain est le plus faible ?**
+
+Ce projet est une chaîne de traitement de données en Python. Il télécharge des données ouvertes
+sur le climat, la population et le développement humain, construit un indice de risque climatique
+pour chaque région, teste trois hypothèses et présente les résultats sous forme de cartes, d'un
+rapport écrit (en français et en anglais) et d'un tableau de bord web.
+
+Le pilote couvre **105 régions de niveau admin-1** (États, provinces, régions) en **France, Inde et
+États-Unis**, soit environ 1,8 milliard d'habitants. Le même code peut tourner sur d'autres pays en
+modifiant le fichier de configuration.
 
 ---
 
-## Main results
+## Principaux résultats
 
-| Hypothesis | Result |
+| Hypothèse | Résultat |
 |---|---|
-| **H1.** Regions with more climate hazard have a lower SHDI | Yes on all regions: Spearman rho = **-0.59**, median SHDI **0.786** vs **0.936**. But most of it is the gap between India and the two other countries. Inside countries: rho = -0.48 in India, -0.48 in the USA, +0.18 in France (not significant). |
-| **H2.** This is still true inside each country | Yes, but smaller: the hazard coefficient goes from **-0.39** to **-0.10** (95% CI -0.14 to -0.06) when we add a country effect. Clear in India and the USA, not in France. |
-| **H3.** The ranking is stable when we change the index formula | Yes: the three versions have rank correlations of at least **0.86**, and at least **9 of the top 10** regions are the same. |
+| **H1.** Les régions les plus exposées aux aléas climatiques ont un SHDI plus faible | Oui sur l'ensemble des régions : rho de Spearman = **-0,59**, SHDI médian **0,786** contre **0,936**. Mais l'essentiel vient de l'écart entre l'Inde et les deux autres pays. À l'intérieur des pays : rho = -0,48 en Inde, -0,48 aux États-Unis, +0,18 en France (non significatif). |
+| **H2.** C'est encore vrai à l'intérieur de chaque pays | Oui, mais l'effet est plus faible : le coefficient de l'aléa passe de **-0,39** à **-0,10** (IC à 95 % : -0,14 à -0,06) quand on ajoute un effet pays. Net en Inde et aux États-Unis, absent en France. |
+| **H3.** Le classement est stable quand on change la formule de l'indice | Oui : les trois versions ont des corrélations de rang d'au moins **0,86**, et au moins **9 des 10** premières régions sont les mêmes. |
 
-All ten highest-risk regions are in India (Bihar, Uttar Pradesh, Madhya Pradesh...). Inside
-their own country, the highest-risk regions are Texas, Alabama and Louisiana (USA) and
-Auvergne-Rhône-Alpes, Occitanie and Nouvelle-Aquitaine (France).
+Les dix régions les plus à risque sont toutes en Inde (Bihar, Uttar Pradesh, Madhya Pradesh...).
+Au sein de leur propre pays, les régions les plus à risque sont le Texas, l'Alabama et la Louisiane
+(États-Unis) et l'Auvergne-Rhône-Alpes, l'Occitanie et la Nouvelle-Aquitaine (France).
 
-These results are **associations, not causes**.
+Ces résultats sont des **associations, pas des causes**.
 
 ---
 
 ## Technologies
 
-| Area | Tools |
+| Domaine | Outils |
 |---|---|
-| Language | Python 3.10+ |
-| Data processing | Pandas, NumPy, PyArrow (Parquet) |
-| Geospatial | GeoPandas, Shapely, PyProj, Rasterio |
-| Statistics | SciPy (Spearman correlation), Statsmodels (OLS regression, HC3 robust errors) |
-| Database | PostgreSQL + PostGIS (Docker), SQLAlchemy, GeoAlchemy2 |
-| Maps and charts | Plotly, Matplotlib, Kaleido |
-| Dashboard | Plotly Dash, Dash Bootstrap Components |
-| Report | Quarto (HTML + PDF, English and French), Jupyter notebook |
-| Testing | pytest |
-| Deployment | Docker, Docker Compose, Render |
+| Langage | Python 3.10+ |
+| Traitement des données | Pandas, NumPy, PyArrow (Parquet) |
+| Géospatial | GeoPandas, Shapely, PyProj, Rasterio |
+| Statistiques | SciPy (corrélation de Spearman), Statsmodels (régression MCO, erreurs robustes HC3) |
+| Base de données | PostgreSQL + PostGIS (Docker), SQLAlchemy, GeoAlchemy2 |
+| Cartes et graphiques | Plotly, Matplotlib, Kaleido |
+| Tableau de bord | Plotly Dash, Dash Bootstrap Components |
+| Rapport | Quarto (HTML + PDF, français et anglais), notebook Jupyter |
+| Tests | pytest |
+| Déploiement | Docker, Docker Compose, Render |
 
 ---
 
-## How the index is built
+## Construction de l'indice
 
-Each indicator is turned into a **percentile rank** between 0 and 1, so we can mix days,
-millimetres and index points.
+Chaque indicateur est transformé en **rang centile** entre 0 et 1, ce qui permet de combiner des
+jours, des millimètres et des points d'indice.
 
 ```
-Hazard        = mean(heat, dry, wet)     heat = mean rank of HD35 and TR25
-                                         dry  = mean rank of CDD and -WBAL
-                                         wet  = mean rank of Rx1day and R50
+Aléa           = moyenne(chaleur, sécheresse, humidité)
+                 chaleur    = rang moyen de HD35 et TR25
+                 sécheresse = rang moyen de CDD et -WBAL
+                 humidité   = rang moyen de Rx1day et R50
 
-Exposure      = rank(population)
+Exposition     = rang(population)
 
-Vulnerability = 1 - rank(SHDI)
+Vulnérabilité  = 1 - rang(SHDI)
 
-Risk          = Hazard x Exposure x Vulnerability
+Risque         = Aléa x Exposition x Vulnérabilité
 ```
 
-- We use a **product** because, following the IPCC, a region needs all three parts to be at risk:
-  a hot desert with nobody living there is not a disaster.
-- **Exposure uses population only.** Heat is already in the hazard score; if we also used
-  "population x heat days" here, heat would be counted twice.
-- Two other versions are used to check the ranking (H3): `additive` (mean of the three scores)
-  and `per_person` (hazard x vulnerability, without population, to check that the ranking is not
-  only a size effect).
-- `rank_in_country` gives the risk rank of each region inside its own country.
+- Nous utilisons un **produit** car, suivant le GIEC, une région doit réunir les trois composantes
+  pour être à risque : un désert brûlant où personne ne vit n'est pas une catastrophe.
+- **L'exposition ne repose que sur la population.** La chaleur est déjà dans le score d'aléa ; si
+  nous utilisions aussi « population x jours de chaleur » ici, la chaleur serait comptée deux fois.
+- Deux autres versions servent à vérifier le classement (H3) : `additive` (moyenne des trois
+  scores) et `per_person` (aléa x vulnérabilité, sans la population, pour vérifier que le classement
+  n'est pas seulement un effet de taille).
+- `rank_in_country` donne le rang de risque de chaque région au sein de son propre pays.
 
-## Statistical tests
+## Tests statistiques
 
-| Hypothesis | Method | Code |
+| Hypothèse | Méthode | Code |
 |---|---|---|
-| H1 | Spearman correlation hazard vs SHDI, on all regions and in each country; median SHDI of the more and less hazardous halves | `src/cro/analysis/tests.py` |
-| H2 | Linear regression (OLS, HC3 robust errors): M1 `shdi ~ hazard`, M2 `shdi ~ hazard + country dummies`; the same line fitted in each country | `src/cro/analysis/regression.py` |
-| H3 | Spearman correlation between the rankings of the three versions + number of shared top-10 regions | `src/cro/analysis/tests.py` |
+| H1 | Corrélation de Spearman aléa / SHDI, sur toutes les régions et par pays ; SHDI médian de la moitié la plus exposée et de la moitié la moins exposée | `src/cro/analysis/tests.py` |
+| H2 | Régression linéaire (MCO, erreurs robustes HC3) : M1 `shdi ~ hazard`, M2 `shdi ~ hazard + indicatrices pays` ; la même droite ajustée dans chaque pays | `src/cro/analysis/regression.py` |
+| H3 | Corrélation de Spearman entre les classements des trois versions + nombre de régions communes dans le top 10 | `src/cro/analysis/tests.py` |
 
 ---
 
-## Walkthrough notebook
+## Notebook de présentation
 
-`notebooks/exploration.ipynb` tells the story of the project step by step: the data, how the
-index is built, the maps and the three hypotheses. It imports the same functions as the
-pipeline (`src/cro/`) and only needs `data/processed/dashboard_regions.parquet`, which is in
-the repository, so it runs right after `git clone`. GitHub shows it with all its tables and
-charts.
+`notebooks/exploration.fr.ipynb` raconte le projet étape par étape : les données, la construction
+de l'indice, les cartes et les trois hypothèses. Il importe les mêmes fonctions que la chaîne de
+traitement (`src/cro/`) et n'a besoin que de `data/processed/dashboard_regions.parquet`, qui est
+dans le dépôt : il fonctionne donc juste après `git clone`. GitHub l'affiche avec tous ses tableaux
+et graphiques. La version anglaise est `notebooks/exploration.ipynb`.
 
 ---
 
-## Quick start
+## Démarrage rapide
 
 ```bash
-# 1. Environment
+# 1. Environnement
 python -m venv .venv
 .venv\Scripts\activate            # Windows
 pip install -e .
 
-# 2. Check that the data sources are reachable
+# 2. Vérifier que les sources de données sont accessibles
 cro probe
 
-# 3. Run the pipeline (downloads ~500 MB once, then uses a cache)
+# 3. Lancer la chaîne de traitement (télécharge ~500 Mo une fois, puis utilise un cache)
 cro all
 
-# 4. Checks, outputs, report
+# 4. Contrôles, sorties, rapport
 cro validate
 cro export
 cro report
 
-# 5. Dashboard
+# 5. Tableau de bord
 cro app            # http://127.0.0.1:8050
 ```
 
-Each step can also be run alone:
+Chaque étape peut aussi être lancée seule :
 
-| Command | What it does |
+| Commande | Rôle |
 |---|---|
-| `cro boundaries` | Download admin-1 polygons from geoBoundaries |
-| `cro climate-points` | Choose climate sample points inside each region |
-| `cro population` | Population per region and per sample point (GHS-POP) |
-| `cro climate` | Download daily NASA POWER data and compute the yearly indicators |
-| `cro development` | SHDI from Global Data Lab + WDI from the World Bank |
-| `cro build` | Build hazard, exposure, vulnerability and the three risk versions |
-| `cro analyze` | Descriptive tables, H1 and H3 tests, H2 regressions |
-| `cro export` | 11 static maps, 6 figures, 4 interactive maps |
-| `cro report` | Build the report tables and render the report (EN + FR) with Quarto |
-| `cro validate` | 8 data checks (exit code 1 if one fails) |
-| `cro load` | Load the tables into PostGIS |
-| `cro app` | Start the Plotly Dash dashboard |
-| `cro all` | Run ingest -> build -> analyze -> export in order |
+| `cro boundaries` | Télécharge les polygones admin-1 depuis geoBoundaries |
+| `cro climate-points` | Choisit les points d'échantillonnage climatique dans chaque région |
+| `cro population` | Population par région et par point d'échantillonnage (GHS-POP) |
+| `cro climate` | Télécharge les données journalières NASA POWER et calcule les indicateurs annuels |
+| `cro development` | SHDI de Global Data Lab + WDI de la Banque mondiale |
+| `cro build` | Construit l'aléa, l'exposition, la vulnérabilité et les trois versions du risque |
+| `cro analyze` | Tableaux descriptifs, tests H1 et H3, régressions H2 |
+| `cro export` | 11 cartes statiques, 6 figures, 4 cartes interactives |
+| `cro report` | Construit les tableaux du rapport et génère le rapport (FR + EN) avec Quarto |
+| `cro validate` | 8 contrôles de données (code de sortie 1 si l'un échoue) |
+| `cro load` | Charge les tables dans PostGIS |
+| `cro app` | Lance le tableau de bord Plotly Dash |
+| `cro all` | Enchaîne ingestion -> construction -> analyse -> export |
 
 ---
 
-## Dashboard
+## Tableau de bord
 
-`cro app` opens one scrolling page at <http://127.0.0.1:8050>:
+`cro app` ouvre une page unique à faire défiler sur <http://127.0.0.1:8050> :
 
-- **the map** - one panel per country. Choose *all* to compare the three countries on one colour
-  scale, or one country to see its internal differences.
-- **the ranking** - the ten regions with the highest value of the chosen measure.
-- **the relationship** - hazard against SHDI, with one trend line per country and the H1/H2/H3
-  results next to it (read from the result tables, never typed by hand).
-- **one place** - the numbers of one region and its position compared with the others.
-- **methods & data** - how the index is built and its limits.
+- **la carte** - un panneau par pays. Choisissez *tous* pour comparer les trois pays sur une même
+  échelle de couleurs, ou un seul pays pour voir ses différences internes.
+- **le classement** - les dix régions ayant la valeur la plus élevée pour la mesure choisie.
+- **la relation** - l'aléa en fonction du SHDI, avec une droite de tendance par pays et les
+  résultats H1/H2/H3 à côté (lus dans les tables de résultats, jamais saisis à la main).
+- **un lieu** - les chiffres d'une région et sa position par rapport aux autres.
+- **méthodes et données** - la construction de l'indice et ses limites.
 
-Other pages on the same server:
+Autres pages sur le même serveur :
 
-- `/summary` - a two-minute summary of the report (`/summary?lang=fr` in French)
-- `/report` and `/report.pdf` - the full report (`/report/fr` and `/report/fr.pdf` in French)
-- `/maps/map_web_risk.html` (and `hazard`, `exposure`, `shdi`) - interactive maps
+- `/summary` - un résumé du rapport en deux minutes (`/summary?lang=fr` en français)
+- `/report` et `/report.pdf` - le rapport complet (`/report/fr` et `/report/fr.pdf` en français)
+- `/maps/map_web_risk.html` (et `hazard`, `exposure`, `shdi`) - cartes interactives
 
-Every page has an **EN / FR** switch. The dashboard reads PostGIS when it is running and the
-Parquet files otherwise, so it works without Docker.
+Chaque page a un bouton **EN / FR**. Le tableau de bord lit PostGIS quand il est lancé, et les
+fichiers Parquet sinon : il fonctionne donc sans Docker.
 
-## Deployment
+## Déploiement
 
-The app is live on Render's free plan: **<https://climate-risk-observatory.onrender.com>**.
-The free instance sleeps after 15 minutes without visitors, so the first request can take about
-a minute.
+L'application est en ligne sur l'offre gratuite de Render :
+**<https://climate-risk-observatory.onrender.com>**. L'instance gratuite se met en veille après
+15 minutes sans visite, la première requête peut donc prendre environ une minute.
 
-`render.yaml` is the Render blueprint and `requirements-deploy.txt` lists only the packages the
-app needs. See **[docs/deploy.md](docs/deploy.md)** for the steps.
+`render.yaml` est le plan de déploiement Render et `requirements-deploy.txt` ne liste que les
+paquets nécessaires à l'application. Les étapes sont décrites dans
+**[docs/deploy.md](docs/deploy.md)**.
 
 ---
 
-## Repository layout
+## Organisation du dépôt
 
 ```
-config/config.yaml              all settings (countries, thresholds, years)
-src/cro/ingest/                 download boundaries, climate, population, development
-src/cro/features/build.py       hazard, exposure, vulnerability, risk versions
-src/cro/analysis/               descriptive tables, H1/H3 tests, H2 regression
-src/cro/viz/                    shared theme, static maps, charts, interactive maps
-src/cro/app/                    Dash dashboard + summary and report pages
-src/cro/app/i18n.py             all English/French texts of the dashboard
-src/cro/db/                     PostGIS schema and loader
-src/cro/report/                 report tables + Quarto rendering
+config/config.yaml              tous les paramètres (pays, seuils, années)
+src/cro/ingest/                 téléchargement des limites, du climat, de la population, du développement
+src/cro/features/build.py       aléa, exposition, vulnérabilité, versions du risque
+src/cro/analysis/               tableaux descriptifs, tests H1/H3, régression H2
+src/cro/viz/                    thème commun, cartes statiques, graphiques, cartes interactives
+src/cro/app/                    tableau de bord Dash + pages résumé et rapport
+src/cro/app/i18n.py             tous les textes français/anglais du tableau de bord
+src/cro/db/                     schéma PostGIS et chargement
+src/cro/report/                 tableaux du rapport + génération Quarto
 report/                         report.qmd / report.fr.qmd
-notebooks/exploration.ipynb     step-by-step walkthrough of the results (uses src/cro)
-tests/                          unit tests, data checks, dashboard tests
-data/processed/                 intermediate tables (Parquet)
-outputs/maps|figures|tables/    results
+notebooks/exploration.fr.ipynb  présentation pas à pas des résultats (en français)
+notebooks/exploration.ipynb     la même présentation en anglais
+tests/                          tests unitaires, contrôles de données, tests du tableau de bord
+data/processed/                 tables intermédiaires (Parquet)
+outputs/maps|figures|tables/    résultats
 outputs/report/                 report(.fr).html/.pdf, validation.md, key_results.md
 ```
 
-`data/processed/region_master.parquet` is the one table that every output reads, so the maps,
-the tables and the dashboard always agree.
+`data/processed/region_master.parquet` est l'unique table lue par toutes les sorties : les cartes,
+les tableaux et le tableau de bord sont donc toujours cohérents.
 
-### Output tables
+### Tables de sortie
 
-| File | Content |
+| Fichier | Contenu |
 |---|---|
-| `t01_summary_by_country.csv` | means by country |
-| `t02_climate_by_country.csv` | climate indicators by country |
-| `t03_top_bottom_regions.csv` | highest and lowest risk regions |
-| `t05_hypothesis_tests.csv` | H1: Spearman correlation, all regions and by country |
-| `t06_rank_stability.csv` | H3: agreement between the three index versions |
-| `t07_regression_coefficients.csv` | H2: models M1 and M2 |
-| `t08_country_slopes.csv` | H2: slope in each country |
+| `t01_summary_by_country.csv` | moyennes par pays |
+| `t02_climate_by_country.csv` | indicateurs climatiques par pays |
+| `t03_top_bottom_regions.csv` | régions au risque le plus élevé et le plus faible |
+| `t05_hypothesis_tests.csv` | H1 : corrélation de Spearman, toutes régions et par pays |
+| `t06_rank_stability.csv` | H3 : concordance entre les trois versions de l'indice |
+| `t07_regression_coefficients.csv` | H2 : modèles M1 et M2 |
+| `t08_country_slopes.csv` | H2 : pente dans chaque pays |
 
 ---
 
-## Data sources and licences
+## Sources de données et licences
 
-| Layer | Source | Resolution | Year | Licence |
+| Couche | Source | Résolution | Année | Licence |
 |---|---|---|---|---|
-| Boundaries | [geoBoundaries](https://www.geoboundaries.org/) (gbOpen) | admin-1 polygons | 2024 release | CC-BY 4.0 |
-| Climate | [NASA POWER](https://power.larc.nasa.gov/) (MERRA-2) | daily point series | 1991-2023 | Open, no key |
+| Limites administratives | [geoBoundaries](https://www.geoboundaries.org/) (gbOpen) | polygones admin-1 | version 2024 | CC-BY 4.0 |
+| Climat | [NASA POWER](https://power.larc.nasa.gov/) (MERRA-2) | séries journalières ponctuelles | 1991-2023 | Libre, sans clé |
 | Population | [GHS-POP R2023A](https://ghsl.jrc.ec.europa.eu/) | ~1 km | 2020 | CC-BY 4.0 |
-| Development | [Global Data Lab SHDI](https://globaldatalab.org/shdi/) | admin-1 | latest available | Free for research |
-| National context | [World Bank WDI](https://databank.worldbank.org/source/world-development-indicators) | country | 2010-2023 | CC-BY 4.0 |
+| Développement | [Global Data Lab SHDI](https://globaldatalab.org/shdi/) | admin-1 | dernière année disponible | Libre pour la recherche |
+| Contexte national | [Banque mondiale WDI](https://databank.worldbank.org/source/world-development-indicators) | pays | 2010-2023 | CC-BY 4.0 |
 
-NASA POWER does not give evapotranspiration, so we estimate it with the Hargreaves formula
-(Hargreaves & Samani, 1985) from daily minimum/maximum temperature and latitude.
+NASA POWER ne fournit pas l'évapotranspiration ; nous l'estimons avec la formule de Hargreaves
+(Hargreaves et Samani, 1985) à partir des températures minimale et maximale journalières et de la
+latitude.
 
 ---
 
-## Quality and tests
+## Qualité et tests
 
-- `cro validate` runs 8 data checks: unique regions, valid geometry, population totals, physical
-  ranges, scores between 0 and 1, SHDI coverage, master table and output tables.
-- `pytest -q` runs the tests:
-  - `tests/test_indicators.py` - the index maths and the statistical functions on small examples;
-  - `tests/test_data_contract.py` - checks on the real files (skipped before the pipeline runs);
-  - `tests/test_presentation.py` - maps, dashboard callbacks and pages.
-- The report and the dashboard read their numbers from the same CSV tables.
+- `cro validate` exécute 8 contrôles de données : unicité des régions, validité des géométries,
+  totaux de population, plages physiques, scores entre 0 et 1, couverture du SHDI, table
+  principale et tables de sortie.
+- `pytest -q` lance les tests :
+  - `tests/test_indicators.py` - les calculs de l'indice et les fonctions statistiques sur de
+    petits exemples ;
+  - `tests/test_data_contract.py` - contrôles sur les fichiers réels (ignorés avant l'exécution de
+    la chaîne) ;
+  - `tests/test_presentation.py` - cartes, callbacks et pages du tableau de bord.
+- Le rapport et le tableau de bord lisent leurs chiffres dans les mêmes tables CSV.
 
-## PostGIS (optional)
+## PostGIS (facultatif)
 
 ```bash
 docker compose up -d
 cro load
 ```
 
-This creates `dim_region`, `dim_country`, `fact_climate`, `fact_population`, `fact_exposure`,
-`fact_development`, `fact_risk` (one row per region and index version) and the view
-`vw_region_profile` on port **5433**.
+Cela crée `dim_region`, `dim_country`, `fact_climate`, `fact_population`, `fact_exposure`,
+`fact_development`, `fact_risk` (une ligne par région et par version de l'indice) et la vue
+`vw_region_profile` sur le port **5433**.
 
 ---
 
-## Limitations
+## Limites
 
-1. **Association, not causation.** History, geography and the economy can explain both climate
-   and development.
-2. **Neighbouring regions are similar.** The tests treat regions as independent, so the p-values
-   are probably too small. A spatial regression model would be the next step.
-3. **Small sample.** 99 regions with SHDI; France has only 13, so its results are uncertain.
-4. **One development indicator.** SHDI does not show inequality inside a region.
-5. **Fixed thresholds.** 35 C and 50 mm are choices; France has almost no days above 35 C.
-6. **Static population.** Population is for 2020; the climate mean is for 2004-2023.
-7. **Coarse sampling.** At most 8 climate points per region.
-8. **Pilot countries.** France, India and the USA were chosen because they are different, not
-   because they represent the world.
+1. **Association, pas causalité.** L'histoire, la géographie et l'économie peuvent expliquer à la
+   fois le climat et le développement.
+2. **Les régions voisines se ressemblent.** Les tests traitent les régions comme indépendantes : les
+   p-valeurs sont donc probablement trop petites. Un modèle de régression spatiale serait l'étape
+   suivante.
+3. **Petit échantillon.** 99 régions ont un SHDI ; la France n'en compte que 13, ses résultats sont
+   donc incertains.
+4. **Un seul indicateur de développement.** Le SHDI ne montre pas les inégalités à l'intérieur
+   d'une région.
+5. **Seuils fixes.** 35 °C et 50 mm sont des choix ; la France n'a presque aucun jour au-dessus de
+   35 °C.
+6. **Population statique.** La population est celle de 2020 ; la moyenne climatique porte sur
+   2004-2023.
+7. **Échantillonnage grossier.** Au plus 8 points climatiques par région.
+8. **Pays pilotes.** La France, l'Inde et les États-Unis ont été choisis parce qu'ils sont
+   différents, pas parce qu'ils représentent le monde.
 
-## Next steps
+## Prochaines étapes
 
-- Add more countries: set `project.pilot_iso3` in `config/config.yaml` (for example `["ALL"]`).
-- Use a spatial regression model.
-- Add a household income indicator to see inequality inside regions.
-- Test other heat thresholds (30 C, 40 C).
+- Ajouter des pays : modifier `project.pilot_iso3` dans `config/config.yaml` (par exemple `["ALL"]`).
+- Utiliser un modèle de régression spatiale.
+- Ajouter un indicateur de revenu des ménages pour voir les inégalités à l'intérieur des régions.
+- Tester d'autres seuils de chaleur (30 °C, 40 °C).
 
-## Key references
+## Références principales
 
-The full list is in the report. The main method choices follow:
+La liste complète figure dans le rapport. Les principaux choix de méthode s'appuient sur :
 
-- **Risk = hazard x exposure x vulnerability:** Cardona et al. (2012), IPCC SREX chapter 2; IPCC (2014), AR5 WGII.
-- **Multiplicative risk index:** Marin-Ferrer, Vernaccini & Poljansek (2017), INFORM methodology (European Commission JRC).
-- **Rank normalisation and robustness checks:** Nardo et al. (2008), OECD/JRC *Handbook on Constructing Composite Indicators*; Saisana, Saltelli & Tarantola (2005), *JRSS A* 168(2).
-- **Climate extreme indicators:** Zhang et al. (2011), *WIREs Climate Change* 2(6).
-- **Climate and income inside countries:** Dell, Jones & Olken (2009), *American Economic Review* 99(2); Nordhaus (2006), *PNAS* 103(10).
-- **Subnational HDI:** Smits & Permanyer (2019), *Scientific Data* 6.
+- **Risque = aléa x exposition x vulnérabilité :** Cardona et al. (2012), GIEC SREX chapitre 2 ; GIEC (2014), AR5 GT II.
+- **Indice de risque multiplicatif :** Marin-Ferrer, Vernaccini et Poljansek (2017), méthodologie INFORM (Centre commun de recherche de la Commission européenne).
+- **Normalisation par les rangs et tests de robustesse :** Nardo et al. (2008), OCDE/CCR *Handbook on Constructing Composite Indicators* ; Saisana, Saltelli et Tarantola (2005), *JRSS A* 168(2).
+- **Indicateurs d'extrêmes climatiques :** Zhang et al. (2011), *WIREs Climate Change* 2(6).
+- **Climat et revenu à l'intérieur des pays :** Dell, Jones et Olken (2009), *American Economic Review* 99(2) ; Nordhaus (2006), *PNAS* 103(10).
+- **IDH infranational :** Smits et Permanyer (2019), *Scientific Data* 6.
